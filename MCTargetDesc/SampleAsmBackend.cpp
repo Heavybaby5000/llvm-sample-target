@@ -80,7 +80,7 @@ public:
   /// fixup requires the associated instruction to be relaxed.
   bool fixupNeedsRelaxation(const MCFixup &Fixup,
                             uint64_t Value,
-                            const MCInstFragment *DF,
+                            const MCRelaxableFragment *DF,
                             const MCAsmLayout &Layout) const {
     // FIXME.
     assert(0 && "RelaxInstruction() unimplemented");
@@ -170,7 +170,7 @@ getFixupKindInfo(MCFixupKind Kind) const {
 } // namespace
 
 // MCAsmBackend
-MCAsmBackend *llvm::createSampleAsmBackend(const Target &T, StringRef TT,
-                                           StringRef CPU) {
+MCAsmBackend *llvm::createSampleAsmBackend(const Target &T, const MCRegisterInfo &MRI,
+                                           StringRef TT, StringRef CPU) {
   return new SampleAsmBackend(T, Triple(TT).getOS());
 }

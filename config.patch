@@ -1,57 +1,20 @@
-diff -Nur llvm-3.2.src/CMakeLists.txt llvm-3.2/CMakeLists.txt
---- llvm-3.2.src/CMakeLists.txt
-+++ llvm-3.2/CMakeLists.txt
-@@ -86,6 +86,7 @@ set(LLVM_ALL_TARGETS
-   Sparc
+diff --git a/llvm/CMakeLists.txt b/llvm/CMakeLists.txt
+index a68e7e163c52..da2617746dae 100644
+--- a/llvm/CMakeLists.txt
++++ b/llvm/CMakeLists.txt
+@@ -110,6 +110,7 @@ set(LLVM_ALL_TARGETS
+   SystemZ
    X86
    XCore
 +  Sample
    )
  
  # List of targets with JIT support:
-diff -Nur llvm-3.2.src/autoconf/configure.ac llvm-3.2/autoconf/configure.ac
---- llvm-3.2.src/autoconf/configure.ac
-+++ llvm-3.2/autoconf/configure.ac
-@@ -370,6 +370,7 @@ AC_CACHE_CHECK([target architecture],[llvm_cv_target_arch],
-   hexagon-*)              llvm_cv_target_arch="Hexagon" ;;
-   mblaze-*)               llvm_cv_target_arch="MBlaze" ;;
-   nvptx-*)                llvm_cv_target_arch="NVPTX" ;;
-+  sample-*)               llvm_cv_target_arch="Sample" ;;
-   *)                      llvm_cv_target_arch="Unknown" ;;
- esac])
- 
-@@ -723,6 +724,7 @@ case "$enableval" in
-         hexagon)  TARGETS_TO_BUILD="Hexagon $TARGETS_TO_BUILD" ;;
-         mblaze)   TARGETS_TO_BUILD="MBlaze $TARGETS_TO_BUILD" ;;
-         nvptx)    TARGETS_TO_BUILD="NVPTX $TARGETS_TO_BUILD" ;;
-+        sample)   TARGETS_TO_BUILD="Sample $TARGETS_TO_BUILD" ;;
-         host) case "$llvm_cv_target_arch" in
-             x86)         TARGETS_TO_BUILD="X86 $TARGETS_TO_BUILD" ;;
-             x86_64)      TARGETS_TO_BUILD="X86 $TARGETS_TO_BUILD" ;;
-diff -Nur llvm-3.2.src/configure llvm-3.2/configure
---- llvm-3.2.src/configure
-+++ llvm-3.2/configure
-@@ -5419,7 +5419,7 @@ if test "$enableval" = host-only ; then
-   enableval=host
- fi
- case "$enableval" in
--  all) TARGETS_TO_BUILD="X86 Sparc PowerPC ARM Mips CellSPU XCore MSP430 CppBackend MBlaze NVPTX Hexagon" ;;
-+  all) TARGETS_TO_BUILD="X86 Sparc PowerPC ARM Mips CellSPU XCore MSP430 CppBackend MBlaze NVPTX Hexagon Sample" ;;
-   *)for a_target in `echo $enableval|sed -e 's/,/ /g' ` ; do
-       case "$a_target" in
-         x86)      TARGETS_TO_BUILD="X86 $TARGETS_TO_BUILD" ;;
-@@ -5438,6 +5438,7 @@ case "$enableval" in
-         hexagon)  TARGETS_TO_BUILD="Hexagon $TARGETS_TO_BUILD" ;;
-         mblaze)   TARGETS_TO_BUILD="MBlaze $TARGETS_TO_BUILD" ;;
-         nvptx)    TARGETS_TO_BUILD="NVPTX $TARGETS_TO_BUILD" ;;
-+        sample)   TARGETS_TO_BUILD="Sample $TARGETS_TO_BUILD" ;;
-         host) case "$llvm_cv_target_arch" in
-             x86)         TARGETS_TO_BUILD="X86 $TARGETS_TO_BUILD" ;;
-             x86_64)      TARGETS_TO_BUILD="X86 $TARGETS_TO_BUILD" ;;
-diff -Nur llvm-3.2.src/include/llvm/ADT/Triple.h llvm-3.2/include/llvm/ADT/Triple.h
---- llvm-3.2.src/include/llvm/ADT/Triple.h
-+++ llvm-3.2/include/llvm/ADT/Triple.h
-@@ -67,7 +67,8 @@ public:
+diff --git a/llvm/include/llvm/ADT/Triple.h b/llvm/include/llvm/ADT/Triple.h
+index 84e0b29d1fe0..c1f9252c2e7a 100644
+--- a/llvm/include/llvm/ADT/Triple.h
++++ b/llvm/include/llvm/ADT/Triple.h
+@@ -71,7 +71,8 @@ public:
      le32,    // le32: generic little-endian 32-bit CPU (PNaCl / Emscripten)
      amdil,   // amdil: amd IL
      spir,    // SPIR: standard portable IR for OpenCL 32-bit version
@@ -61,10 +24,11 @@ diff -Nur llvm-3.2.src/include/llvm/ADT/Triple.h llvm-3.2/include/llvm/ADT/Tripl
    };
    enum VendorType {
      UnknownVendor,
-diff -Nur llvm-3.2.src/lib/Support/Triple.cpp llvm-3.2/lib/Support/Triple.cpp
---- llvm-3.2.src/lib/Support/Triple.cpp
-+++ llvm-3.2/lib/Support/Triple.cpp
-@@ -44,6 +44,7 @@ const char *Triple::getArchTypeName(ArchType Kind) {
+diff --git a/llvm/lib/Support/Triple.cpp b/llvm/lib/Support/Triple.cpp
+index 6c978a0244bc..47651009e9b8 100644
+--- a/llvm/lib/Support/Triple.cpp
++++ b/llvm/lib/Support/Triple.cpp
+@@ -45,6 +45,7 @@ const char *Triple::getArchTypeName(ArchType Kind) {
    case amdil:   return "amdil";
    case spir:    return "spir";
    case spir64:  return "spir64";
@@ -72,7 +36,7 @@ diff -Nur llvm-3.2.src/lib/Support/Triple.cpp llvm-3.2/lib/Support/Triple.cpp
    }
  
    llvm_unreachable("Invalid ArchType!");
-@@ -180,6 +181,7 @@ Triple::ArchType Triple::getArchTypeForLLVMName(StringRef Name) {
+@@ -187,6 +188,7 @@ Triple::ArchType Triple::getArchTypeForLLVMName(StringRef Name) {
      .Case("amdil", amdil)
      .Case("spir", spir)
      .Case("spir64", spir64)
@@ -80,7 +44,7 @@ diff -Nur llvm-3.2.src/lib/Support/Triple.cpp llvm-3.2/lib/Support/Triple.cpp
      .Default(UnknownArch);
  }
  
-@@ -242,6 +244,7 @@ static Triple::ArchType parseArch(StringRef ArchName) {
+@@ -250,6 +252,7 @@ static Triple::ArchType parseArch(StringRef ArchName) {
      .Case("amdil", Triple::amdil)
      .Case("spir", Triple::spir)
      .Case("spir64", Triple::spir64)
@@ -88,15 +52,15 @@ diff -Nur llvm-3.2.src/lib/Support/Triple.cpp llvm-3.2/lib/Support/Triple.cpp
      .Default(Triple::UnknownArch);
  }
  
-@@ -678,6 +681,7 @@ static unsigned getArchPointerBitWidth(llvm::Triple::ArchType Arch) {
+@@ -688,6 +691,7 @@ static unsigned getArchPointerBitWidth(llvm::Triple::ArchType Arch) {
    case llvm::Triple::x86:
    case llvm::Triple::xcore:
    case llvm::Triple::spir:
 +  case llvm::Triple::sample:
      return 32;
  
-   case llvm::Triple::mips64:
-@@ -729,6 +733,7 @@ Triple Triple::get32BitArchVariant() const {
+   case llvm::Triple::aarch64:
+@@ -743,6 +747,7 @@ Triple Triple::get32BitArchVariant() const {
    case Triple::thumb:
    case Triple::x86:
    case Triple::xcore:
@@ -104,7 +68,7 @@ diff -Nur llvm-3.2.src/lib/Support/Triple.cpp llvm-3.2/lib/Support/Triple.cpp
      // Already 32-bit.
      break;
  
-@@ -758,6 +763,7 @@ Triple Triple::get64BitArchVariant() const {
+@@ -770,6 +775,7 @@ Triple Triple::get64BitArchVariant() const {
    case Triple::tce:
    case Triple::thumb:
    case Triple::xcore:
@@ -112,504 +76,16 @@ diff -Nur llvm-3.2.src/lib/Support/Triple.cpp llvm-3.2/lib/Support/Triple.cpp
      T.setArch(UnknownArch);
      break;
  
-diff -Nur llvm-3.2.src/lib/Target/LLVMBuild.txt llvm-3.2/lib/Target/LLVMBuild.txt
---- llvm-3.2.src/lib/Target/LLVMBuild.txt
-+++ llvm-3.2/lib/Target/LLVMBuild.txt
+diff --git a/llvm/lib/Target/LLVMBuild.txt b/llvm/lib/Target/LLVMBuild.txt
+index 98d26bcac8af..58a6e7049c82 100644
+--- a/llvm/lib/Target/LLVMBuild.txt
++++ b/llvm/lib/Target/LLVMBuild.txt
 @@ -16,7 +16,7 @@
  ;===------------------------------------------------------------------------===;
  
  [common]
--subdirectories = ARM CellSPU CppBackend Hexagon MBlaze MSP430 NVPTX Mips PowerPC Sparc X86 XCore
-+subdirectories = ARM CellSPU CppBackend Hexagon MBlaze MSP430 NVPTX Mips PowerPC Sparc X86 XCore Sample
+-subdirectories = AArch64 ARM CppBackend Hexagon MSP430 NVPTX Mips PowerPC R600 Sparc SystemZ X86 XCore
++subdirectories = AArch64 ARM CppBackend Hexagon MSP430 NVPTX Mips PowerPC R600 Sparc SystemZ X86 XCore Sample
  
  ; This is a special group whose required libraries are extended (by llvm-build)
  ; with the best execution engine (the native JIT, if available, or the
-diff -Nur llvm-3.2.src/projects/sample/configure llvm-3.2/projects/sample/configure
---- llvm-3.2.src/projects/sample/configure
-+++ llvm-3.2/projects/sample/configure
-@@ -5255,7 +5255,7 @@ if test "$enableval" = host-only ; then
-   enableval=host
- fi
- case "$enableval" in
--  all) TARGETS_TO_BUILD="X86 Sparc PowerPC ARM Mips CellSPU XCore MSP430 Hexagon CppBackend MBlaze NVPTX" ;;
-+  all) TARGETS_TO_BUILD="X86 Sparc PowerPC ARM Mips CellSPU XCore MSP430 Hexagon CppBackend MBlaze NVPTX Sample" ;;
-   *)for a_target in `echo $enableval|sed -e 's/,/ /g' ` ; do
-       case "$a_target" in
-         x86)      TARGETS_TO_BUILD="X86 $TARGETS_TO_BUILD" ;;
-@@ -5271,6 +5271,7 @@ case "$enableval" in
-         cpp)      TARGETS_TO_BUILD="CppBackend $TARGETS_TO_BUILD" ;;
-         mblaze)   TARGETS_TO_BUILD="MBlaze $TARGETS_TO_BUILD" ;;
-         nvptx)    TARGETS_TO_BUILD="NVPTX $TARGETS_TO_BUILD" ;;
-+        sample)   TARGETS_TO_BUILD="Sample $TARGETS_TO_BUILD" ;;
-         host) case "$llvm_cv_target_arch" in
-             x86)         TARGETS_TO_BUILD="X86 $TARGETS_TO_BUILD" ;;
-             x86_64)      TARGETS_TO_BUILD="X86 $TARGETS_TO_BUILD" ;;
-diff -Nur llvm-3.2.src/utils/llvm-build/llvmbuild/__init__.py llvm-3.2/utils/llvm-build/llvmbuild/__init__.py
---- llvm-3.2.src/utils/llvm-build/llvmbuild/__init__.py
-+++ llvm-3.2/utils/llvm-build/llvmbuild/__init__.py
-@@ -1 +1 @@
--from main import main
-+from llvmbuild.main import main
-diff -Nur llvm-3.2.src/utils/llvm-build/llvmbuild/componentinfo.py llvm-3.2/utils/llvm-build/llvmbuild/componentinfo.py
---- llvm-3.2.src/utils/llvm-build/llvmbuild/componentinfo.py
-+++ llvm-3.2/utils/llvm-build/llvmbuild/componentinfo.py
-@@ -2,11 +2,14 @@
- Descriptor objects for entities that are part of the LLVM project.
- """
- 
--import ConfigParser
--import StringIO
-+from __future__ import absolute_import
-+try:
-+    import configparser
-+except:
-+    import ConfigParser as configparser
- import sys
- 
--from util import *
-+from llvmbuild.util import *
- 
- class ParseError(Exception):
-     pass
-@@ -29,7 +32,7 @@ class ComponentInfo(object):
- 
-     def __init__(self, subpath, name, dependencies, parent):
-         if not subpath.startswith('/'):
--            raise ValueError,"invalid subpath: %r" % subpath
-+            raise ValueError("invalid subpath: %r" % subpath)
-         self.subpath = subpath
-         self.name = name
-         self.dependencies = list(dependencies)
-@@ -100,11 +103,11 @@ class GroupComponentInfo(ComponentInfo):
-         ComponentInfo.__init__(self, subpath, name, [], parent)
- 
-     def get_llvmbuild_fragment(self):
--        result = StringIO.StringIO()
--        print >>result, 'type = %s' % self.type_name
--        print >>result, 'name = %s' % self.name
--        print >>result, 'parent = %s' % self.parent
--        return result.getvalue()
-+        return """\
-+type = %s
-+name = %s
-+parent = %s
-+""" % (self.type_name, self.name, self.parent)
- 
- class LibraryComponentInfo(ComponentInfo):
-     type_name = 'Library'
-@@ -152,21 +155,22 @@ class LibraryComponentInfo(ComponentInfo):
-             yield ('library group', r)
- 
-     def get_llvmbuild_fragment(self):
--        result = StringIO.StringIO()
--        print >>result, 'type = %s' % self.type_name
--        print >>result, 'name = %s' % self.name
--        print >>result, 'parent = %s' % self.parent
-+        result = """\
-+type = %s
-+name = %s
-+parent = %s
-+""" % (self.type_name, self.name, self.parent)
-         if self.library_name is not None:
--            print >>result, 'library_name = %s' % self.library_name
-+            result += 'library_name = %s\n' % self.library_name
-         if self.required_libraries:
--            print >>result, 'required_libraries = %s' % ' '.join(
-+            result += 'required_libraries = %s\n' % ' '.join(
-                 self.required_libraries)
-         if self.add_to_library_groups:
--            print >>result, 'add_to_library_groups = %s' % ' '.join(
-+            result += 'add_to_library_groups = %s\n' % ' '.join(
-                 self.add_to_library_groups)
-         if not self.installed:
--            print >>result, 'installed = 0'
--        return result.getvalue()
-+            result += 'installed = 0\n'
-+        return result
- 
-     def get_library_name(self):
-         return self.library_name or self.name
-@@ -237,17 +241,18 @@ class LibraryGroupComponentInfo(ComponentInfo):
-             yield ('library group', r)
- 
-     def get_llvmbuild_fragment(self):
--        result = StringIO.StringIO()
--        print >>result, 'type = %s' % self.type_name
--        print >>result, 'name = %s' % self.name
--        print >>result, 'parent = %s' % self.parent
-+        result = """\
-+type = %s
-+name = %s
-+parent = %s
-+""" % (self.type_name, self.name, self.parent)
-         if self.required_libraries and not self._is_special_group:
--            print >>result, 'required_libraries = %s' % ' '.join(
-+            result += 'required_libraries = %s\n' % ' '.join(
-                 self.required_libraries)
-         if self.add_to_library_groups:
--            print >>result, 'add_to_library_groups = %s' % ' '.join(
-+            result += 'add_to_library_groups = %s\n' % ' '.join(
-                 self.add_to_library_groups)
--        return result.getvalue()
-+        return result
- 
-     def get_llvmconfig_component_name(self):
-         return self.name.lower()
-@@ -309,21 +314,22 @@ class TargetGroupComponentInfo(ComponentInfo):
-             yield ('library group', r)
- 
-     def get_llvmbuild_fragment(self):
--        result = StringIO.StringIO()
--        print >>result, 'type = %s' % self.type_name
--        print >>result, 'name = %s' % self.name
--        print >>result, 'parent = %s' % self.parent
-+        result = """\
-+type = %s
-+name = %s
-+parent = %s
-+""" % (self.type_name, self.name, self.parent)
-         if self.required_libraries:
--            print >>result, 'required_libraries = %s' % ' '.join(
-+            result += 'required_libraries = %s\n' % ' '.join(
-                 self.required_libraries)
-         if self.add_to_library_groups:
--            print >>result, 'add_to_library_groups = %s' % ' '.join(
-+            result += 'add_to_library_groups = %s\n' % ' '.join(
-                 self.add_to_library_groups)
-         for bool_key in ('has_asmparser', 'has_asmprinter', 'has_disassembler',
-                          'has_jit'):
-             if getattr(self, bool_key):
--                print >>result, '%s = 1' % (bool_key,)
--        return result.getvalue()
-+                result += '%s = 1\n' % (bool_key,)
-+        return result
- 
-     def get_llvmconfig_component_name(self):
-         return self.name.lower()
-@@ -352,13 +358,13 @@ class ToolComponentInfo(ComponentInfo):
-             yield ('required library', r)
- 
-     def get_llvmbuild_fragment(self):
--        result = StringIO.StringIO()
--        print >>result, 'type = %s' % self.type_name
--        print >>result, 'name = %s' % self.name
--        print >>result, 'parent = %s' % self.parent
--        print >>result, 'required_libraries = %s' % ' '.join(
--            self.required_libraries)
--        return result.getvalue()
-+        return """\
-+type = %s
-+name = %s
-+parent = %s
-+required_libraries = %s
-+""" % (self.type_name, self.name, self.parent,
-+       ' '.join(self.required_libraries))
- 
- class BuildToolComponentInfo(ToolComponentInfo):
-     type_name = 'BuildTool'
-@@ -418,7 +424,7 @@ _component_type_map = dict(
-               TargetGroupComponentInfo, OptionalLibraryComponentInfo))
- def load_from_path(path, subpath):
-     # Load the LLVMBuild.txt file as an .ini format file.
--    parser = ConfigParser.RawConfigParser()
-+    parser = configparser.RawConfigParser()
-     parser.read(path)
- 
-     # Extract the common section.
-@@ -459,8 +465,9 @@ def _read_components_from_parser(parser, path, subpath):
-                 section, path, "unable to instantiate: %r" % type_name)
-             import traceback
-             traceback.print_exc()
--            raise SystemExit, 1
--        except ParseError,e:
-+            raise SystemExit(1)
-+        except ParseError:
-+            e = sys.exc_info()[1]
-             fatal("unable to load component %r in %r: %s" % (
-                     section, path, e.message))
- 
-diff -Nur llvm-3.2.src/utils/llvm-build/llvmbuild/main.py llvm-3.2/utils/llvm-build/llvmbuild/main.py
---- llvm-3.2.src/utils/llvm-build/llvmbuild/main.py
-+++ llvm-3.2/utils/llvm-build/llvmbuild/main.py
-@@ -1,11 +1,11 @@
--import StringIO
-+from __future__ import absolute_import
- import os
- import sys
- 
--import componentinfo
--import configutil
-+import llvmbuild.componentinfo as componentinfo
-+import llvmbuild.configutil as configutil
- 
--from util import *
-+from llvmbuild.util import *
- 
- ###
- 
-@@ -182,9 +182,11 @@ class LLVMProjectInfo(object):
-         # out easily. If we don't, we should special case the check.
- 
-         self.ordered_component_infos = []
--        components_to_visit = set(self.component_infos)
-+        components_to_visit = sorted(
-+            set(self.component_infos),
-+            key = lambda c: c.name)
-         while components_to_visit:
--            visit_component_info(iter(components_to_visit).next(), [], set())
-+            visit_component_info(components_to_visit[0], [], set())
- 
-         # Canonicalize children lists.
-         for c in self.ordered_component_infos:
-@@ -192,7 +194,7 @@ class LLVMProjectInfo(object):
- 
-     def print_tree(self):
-         def visit(node, depth = 0):
--            print '%s%-40s (%s)' % ('  '*depth, node.name, node.type_name)
-+            print('%s%-40s (%s)' % ('  '*depth, node.name, node.type_name))
-             for c in node.children:
-                 visit(c, depth + 1)
-         visit(self.component_info_map['$ROOT'])
-@@ -281,7 +283,7 @@ subdirectories = %s
-             header_name = '.' + os.path.join(subpath, 'LLVMBuild.txt')
-             header_pad = '-' * (80 - len(header_fmt % (header_name, '')))
-             header_string = header_fmt % (header_name, header_pad)
--            print >>f, """\
-+            f.write("""\
- %s
- ;
- ;                     The LLVM Compiler Infrastructure
-@@ -298,17 +300,18 @@ subdirectories = %s
- ;   http://llvm.org/docs/LLVMBuild.html
- ;
- ;===------------------------------------------------------------------------===;
--""" % header_string
-+
-+""" % header_string)
- 
-             # Write out each fragment.each component fragment.
-             for name,fragment in fragments:
-                 comment = comments_map.get(name)
-                 if comment is not None:
-                     f.write(comment)
--                print >>f, "[%s]" % name
-+                f.write("[%s]\n" % name)
-                 f.write(fragment)
-                 if fragment is not fragments[-1][1]:
--                    print >>f
-+                    f.write('\n')
- 
-             f.close()
- 
-@@ -361,7 +364,7 @@ subdirectories = %s
-                                is_installed)
- 
-         # Convert to a list of entries and sort by name.
--        entries = entries.values()
-+        entries = list(entries.values())
- 
-         # Create an 'all' pseudo component. We keep the dependency list small by
-         # only listing entries that have no other dependents.
-@@ -380,7 +383,7 @@ subdirectories = %s
-         # Write out the library table.
-         make_install_dir(os.path.dirname(output_path))
-         f = open(output_path, 'w')
--        print >>f, """\
-+        f.write("""\
- //===- llvm-build generated file --------------------------------*- C++ -*-===//
- //
- // Component Library Depenedency Table
-@@ -388,32 +391,33 @@ subdirectories = %s
- // Automatically generated file, do not edit!
- //
- //===----------------------------------------------------------------------===//
--"""
--        print >>f, 'struct AvailableComponent {'
--        print >>f, '  /// The name of the component.'
--        print >>f, '  const char *Name;'
--        print >>f, ''
--        print >>f, '  /// The name of the library for this component (or NULL).'
--        print >>f, '  const char *Library;'
--        print >>f, ''
--        print >>f, '  /// Whether the component is installed.'
--        print >>f, '  bool IsInstalled;'
--        print >>f, ''
--        print >>f, '\
--  /// The list of libraries required when linking this component.'
--        print >>f, '  const char *RequiredLibraries[%d];' % (
--            max_required_libraries)
--        print >>f, '} AvailableComponents[%d] = {' % len(entries)
-+
-+""")
-+        f.write('struct AvailableComponent {\n')
-+        f.write('  /// The name of the component.\n')
-+        f.write('  const char *Name;\n')
-+        f.write('\n')
-+        f.write('  /// The name of the library for this component (or NULL).\n')
-+        f.write('  const char *Library;\n')
-+        f.write('\n')
-+        f.write('  /// Whether the component is installed.\n')
-+        f.write('  bool IsInstalled;\n')
-+        f.write('\n')
-+        f.write('\
-+  /// The list of libraries required when linking this component.\n')
-+        f.write('  const char *RequiredLibraries[%d];\n' % (
-+            max_required_libraries))
-+        f.write('} AvailableComponents[%d] = {\n' % len(entries))
-         for name,library_name,required_names,is_installed in entries:
-             if library_name is None:
-                 library_name_as_cstr = '0'
-             else:
-                 library_name_as_cstr = '"lib%s.a"' % library_name
--            print >>f, '  { "%s", %s, %d, { %s } },' % (
-+            f.write('  { "%s", %s, %d, { %s } },\n' % (
-                 name, library_name_as_cstr, is_installed,
-                 ', '.join('"%s"' % dep
--                          for dep in required_names))
--        print >>f, '};'
-+                          for dep in required_names)))
-+        f.write('};\n')
-         f.close()
- 
-     def get_required_libraries_for_component(self, ci, traverse_groups = False):
-@@ -510,7 +514,7 @@ subdirectories = %s
-         header_name = os.path.basename(output_path)
-         header_pad = '-' * (80 - len(header_fmt % (header_name, '')))
-         header_string = header_fmt % (header_name, header_pad)
--        print >>f, """\
-+        f.write("""\
- %s
- #
- #                     The LLVM Compiler Infrastructure
-@@ -526,10 +530,11 @@ subdirectories = %s
- # This file is autogenerated by llvm-build, do not edit!
- #
- #===------------------------------------------------------------------------===#
--""" % header_string
-+
-+""" % header_string)
- 
-         # Write the dependency information in the best way we can.
--        print >>f, """
-+        f.write("""
- # LLVMBuild CMake fragment dependencies.
- #
- # CMake has no builtin way to declare that the configuration depends on
-@@ -539,30 +544,32 @@ subdirectories = %s
- # CMake.
- #
- # FIXME: File a CMake RFE to get a properly supported version of this
--# feature."""
-+# feature.
-+""")
-         for dep in dependencies:
--            print >>f, """\
-+            f.write("""\
- configure_file(\"%s\"
--               ${CMAKE_CURRENT_BINARY_DIR}/DummyConfigureOutput)""" % (
--                cmake_quote_path(dep),)
-+               ${CMAKE_CURRENT_BINARY_DIR}/DummyConfigureOutput)\n""" % (
-+                cmake_quote_path(dep),))
- 
-         # Write the properties we use to encode the required library dependency
-         # information in a form CMake can easily use directly.
--        print >>f, """
-+        f.write("""
- # Explicit library dependency information.
- #
- # The following property assignments effectively create a map from component
--# names to required libraries, in a way that is easily accessed from CMake."""
-+# names to required libraries, in a way that is easily accessed from CMake.
-+""")
-         for ci in self.ordered_component_infos:
-             # We only write the information for libraries currently.
-             if ci.type_name != 'Library':
-                 continue
- 
--            print >>f, """\
--set_property(GLOBAL PROPERTY LLVMBUILD_LIB_DEPS_%s %s)""" % (
-+            f.write("""\
-+set_property(GLOBAL PROPERTY LLVMBUILD_LIB_DEPS_%s %s)\n""" % (
-                 ci.get_prefixed_library_name(), " ".join(sorted(
-                      dep.get_prefixed_library_name()
--                     for dep in self.get_required_libraries_for_component(ci))))
-+                     for dep in self.get_required_libraries_for_component(ci)))))
- 
-         f.close()
- 
-@@ -588,7 +595,7 @@ set_property(GLOBAL PROPERTY LLVMBUILD_LIB_DEPS_%s %s)""" % (
-         header_name = os.path.basename(output_path)
-         header_pad = '-' * (80 - len(header_fmt % (header_name, '')))
-         header_string = header_fmt % (header_name, header_pad)
--        print >>f, """\
-+        f.write("""\
- %s
- #
- #                     The LLVM Compiler Infrastructure
-@@ -604,30 +611,33 @@ set_property(GLOBAL PROPERTY LLVMBUILD_LIB_DEPS_%s %s)""" % (
- # This file is autogenerated by llvm-build, do not edit!
- #
- #===------------------------------------------------------------------------===#
--""" % header_string
-+
-+""" % header_string)
- 
-         # Write the dependencies for the fragment.
-         #
-         # FIXME: Technically, we need to properly quote for Make here.
--        print >>f, """\
-+        f.write("""\
- # Clients must explicitly enable LLVMBUILD_INCLUDE_DEPENDENCIES to get
- # these dependencies. This is a compromise to help improve the
--# performance of recursive Make systems.""" 
--        print >>f, 'ifeq ($(LLVMBUILD_INCLUDE_DEPENDENCIES),1)'
--        print >>f, "# The dependencies for this Makefile fragment itself."
--        print >>f, "%s: \\" % (mk_quote_string_for_target(output_path),)
-+# performance of recursive Make systems.
-+""")
-+        f.write('ifeq ($(LLVMBUILD_INCLUDE_DEPENDENCIES),1)\n')
-+        f.write("# The dependencies for this Makefile fragment itself.\n")
-+        f.write("%s: \\\n" % (mk_quote_string_for_target(output_path),))
-         for dep in dependencies:
--            print >>f, "\t%s \\" % (dep,)
--        print >>f
-+            f.write("\t%s \\\n" % (dep,))
-+        f.write('\n')
- 
-         # Generate dummy rules for each of the dependencies, so that things
-         # continue to work correctly if any of those files are moved or removed.
--        print >>f, """\
-+        f.write("""\
- # The dummy targets to allow proper regeneration even when files are moved or
--# removed."""
-+# removed.
-+""")
-         for dep in dependencies:
--            print >>f, "%s:" % (mk_quote_string_for_target(dep),)
--        print >>f, 'endif'
-+            f.write("%s:\n" % (mk_quote_string_for_target(dep),))
-+        f.write('endif\n')
- 
-         f.close()
- 
-@@ -799,7 +809,7 @@ given by --build-root) at the same SUBPATH""",
-                       dest="optional_components", metavar="NAMES",
-                       help=("Enable the given space or semi-colon separated "
-                             "list of optional components"),
--                      action="store", default=None)
-+                      action="store", default="")
-     parser.add_option_group(group)
- 
-     (opts, args) = parser.parse_args()
-diff -Nur llvm-3.2.src/utils/llvm-build/llvmbuild/util.py llvm-3.2/utils/llvm-build/llvmbuild/util.py
---- llvm-3.2.src/utils/llvm-build/llvmbuild/util.py
-+++ llvm-3.2/utils/llvm-build/llvmbuild/util.py
-@@ -3,7 +3,7 @@ import sys
- 
- def _write_message(kind, message):
-     program = os.path.basename(sys.argv[0])
--    print >>sys.stderr, '%s: %s: %s' % (program, kind, message)
-+    sys.stderr.write('%s: %s: %s\n' % (program, kind, message))
- 
- note = lambda message: _write_message('note', message)
- warning = lambda message: _write_message('warning', message)

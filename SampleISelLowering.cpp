@@ -19,11 +19,11 @@
 #include "SampleSubtarget.h"
 #include "InstPrinter/SampleInstPrinter.h"
 #include "MCTargetDesc/SampleMCTargetDesc.h"
-#include "llvm/DerivedTypes.h"
-#include "llvm/Function.h"
-#include "llvm/GlobalVariable.h"
-#include "llvm/Intrinsics.h"
-#include "llvm/CallingConv.h"
+#include "llvm/IR/DerivedTypes.h"
+#include "llvm/IR/Function.h"
+#include "llvm/IR/GlobalVariable.h"
+#include "llvm/IR/Intrinsics.h"
+#include "llvm/IR/CallingConv.h"
 #include "llvm/CodeGen/CallingConvLower.h"
 #include "llvm/CodeGen/MachineFrameInfo.h"
 #include "llvm/CodeGen/MachineFunction.h"
@@ -106,7 +106,7 @@ SDValue SampleTargetLowering::
 LowerFormalArguments(SDValue Chain, CallingConv::ID CallConv,
                      bool isVarArg,
                      const SmallVectorImpl<ISD::InputArg> &Ins,
-                     DebugLoc dl, SelectionDAG &DAG,
+                     SDLoc dl, SelectionDAG &DAG,
                      SmallVectorImpl<SDValue> &InVals) const {
   DEBUG(dbgs() << ">> SampleTargetLowering::LowerFormalArguments <<\n");
   DEBUG(dbgs() << "  Chain: ";  Chain->dumpr(););
@@ -125,12 +125,12 @@ LowerFormalArguments(SDValue Chain, CallingConv::ID CallConv,
     CCValAssign &VA = ArgLocs[i];
     if (VA.isRegLoc()) {
       // 引数がレジスタで渡された場合
-      EVT RegVT = VA.getLocVT();
+      MVT RegVT = VA.getLocVT();
       const TargetRegisterClass *RC = &Sample::CPURegsRegClass;
 
       DEBUG(dbgs() << "  Reg N" << i 
             << " LowerFormalArguments Unhandled argument type: "
-            << RegVT.getSimpleVT().SimpleTy << "\n";);
+            << RegVT.SimpleTy << "\n";);
       if (VA.getLocInfo() != CCValAssign::Full) {
         llvm_unreachable("not supported yet");
       }
@@ -183,7 +183,7 @@ SDValue SampleTargetLowering::
 LowerCall(CallLoweringInfo &CLI,
           SmallVectorImpl<SDValue> &InVals) const {
   SelectionDAG &DAG                     = CLI.DAG;
-  DebugLoc &dl                          = CLI.DL;
+  SDLoc &dl                          = CLI.DL;
   SmallVector<ISD::OutputArg, 32> &Outs = CLI.Outs;
   SmallVector<SDValue, 32> &OutVals     = CLI.OutVals;
   SmallVector<ISD::InputArg, 32> &Ins   = CLI.Ins;
@@ -213,7 +213,7 @@ LowerCall(CallLoweringInfo &CLI,
 
   // 関数呼び出し開始のNode
   InChain = DAG.getCALLSEQ_START(InChain ,
-                                 DAG.getConstant(NumBytes, getPointerTy(), true));
+                                 DAG.getConstant(NumBytes, getPointerTy(), true), dl);
 
   SmallVector<std::pair<unsigned, SDValue>, 4> RegsToPass;
   SDValue StackPtr;
@@ -295,7 +295,7 @@ LowerCall(CallLoweringInfo &CLI,
   InChain = DAG.getCALLSEQ_END(InChain,
                                DAG.getConstant(NumBytes, getPointerTy(), true),
                                DAG.getConstant(0, getPointerTy(), true),
-                               InFlag);
+                               InFlag, dl);
   InFlag = InChain.getValue(1);
 
   // 戻り値の処理
@@ -309,7 +309,7 @@ SDValue SampleTargetLowering::
 LowerCallResult(SDValue Chain, SDValue InFlag,
                 CallingConv::ID CallConv, bool isVarArg,
                 const SmallVectorImpl<ISD::InputArg> &Ins,
-                DebugLoc dl, SelectionDAG &DAG,
+                SDLoc dl, SelectionDAG &DAG,
                 SmallVectorImpl<SDValue> &InVals) const {
   // Assign locations to each value returned by this call.
   SmallVector<CCValAssign, 16> RVLocs;
@@ -338,7 +338,7 @@ LowerReturn(SDValue Chain,
             CallingConv::ID CallConv, bool isVarArg,
             const SmallVectorImpl<ISD::OutputArg> &Outs,
             const SmallVectorImpl<SDValue> &OutVals,
-            DebugLoc dl, SelectionDAG &DAG) const {
+            SDLoc dl, SelectionDAG &DAG) const {
   DEBUG(dbgs() << ">> SampleTargetLowering::LowerReturn <<\n");
   DEBUG(dbgs() << " Chain: "; Chain->dumpr(););
 
@@ -349,14 +349,8 @@ LowerReturn(SDValue Chain,
   // 戻り値を解析する
   CCInfo.AnalyzeReturn(Outs, RetCC_Sample);
 
-  // この関数で最初の戻り値の場合はレジスタをliveoutに追加
-  if (DAG.getMachineFunction().getRegInfo().liveout_empty()) {
-    for (unsigned i = 0; i != RVLocs.size(); ++i)
-      if (RVLocs[i].isRegLoc())
-        DAG.getMachineFunction().getRegInfo().addLiveOut(RVLocs[i].getLocReg());
-  }
-
   SDValue Flag;
+  SmallVector<SDValue, 4> RetOps(1, Chain);
 
   // 戻り値をレジスタにコピーするノードを作成
   for (unsigned i = 0; i != RVLocs.size(); ++i) {
@@ -366,9 +360,9 @@ LowerReturn(SDValue Chain,
     Chain = DAG.getCopyToReg(Chain, dl, VA.getLocReg(),
                              OutVals[i], Flag);
 
-    // Guarantee that all emitted copies are stuck together,
-    // avoiding something bad.
+    // Guarantee that all emitted copies are stuck together with flags.
     Flag = Chain.getValue(1);
+    RetOps.push_back(DAG.getRegister(VA.getLocReg(), VA.getLocVT()));
   }
 
   DEBUG(
@@ -377,11 +371,14 @@ LowerReturn(SDValue Chain,
         dbgs() << "  OutVals: "; i->getNode()->dump();
       });
 
-  // 常に "ret $ra" を生成
+  RetOps[0] = Chain;
+  RetOps[1] = DAG.getRegister(Sample::RA, MVT::i32);
+
+  // フラグが立っていたら追加する
   if (Flag.getNode())
-    return DAG.getNode(SampleISD::Ret, dl, MVT::Other,
-                       Chain, DAG.getRegister(Sample::RA, MVT::i32), Flag);
-  else // Return Void
-    return DAG.getNode(SampleISD::Ret, dl, MVT::Other,
-                       Chain, DAG.getRegister(Sample::RA, MVT::i32));
+    RetOps.push_back(Flag);
+
+  // 常に "ret $ra" を生成
+  return DAG.getNode(SampleISD::Ret, dl, MVT::Other, &RetOps[0],
+                     RetOps.size());
 }

@@ -36,7 +36,8 @@ MCCodeEmitter *createSampleMCCodeEmitter(const MCInstrInfo &MCII,
                                          const MCSubtargetInfo &STI,
                                          MCContext &Ctx);
 
-MCAsmBackend *createSampleAsmBackend(const Target &T, StringRef TT, StringRef CPU);
+MCAsmBackend *createSampleAsmBackend(const Target &T, const MCRegisterInfo &MRI,
+                                     StringRef TT, StringRef CPU);
 
 MCObjectWriter *createSampleELFObjectWriter(raw_ostream &OS,
                                             uint8_t OSABI);

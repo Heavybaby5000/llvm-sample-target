@@ -15,9 +15,9 @@
 
 #include "SampleRegisterInfo.h"
 #include "Sample.h"
-#include "llvm/Constants.h"
-#include "llvm/Type.h"
-#include "llvm/Function.h"
+#include "llvm/IR/Constants.h"
+#include "llvm/IR/Type.h"
+#include "llvm/IR/Function.h"
 #include "llvm/CodeGen/ValueTypes.h"
 #include "llvm/CodeGen/MachineInstrBuilder.h"
 #include "llvm/CodeGen/MachineFunction.h"
@@ -87,22 +87,16 @@ eliminateCallFramePseudoInstr(MachineFunction &MF, MachineBasicBlock &MBB,
 // FrameIndexをスタックポインタに置き換える
 void SampleRegisterInfo::
 eliminateFrameIndex(MachineBasicBlock::iterator II, int SPAdj,
-                    RegScavenger *RS) const {
+                    unsigned FIOperandNum, RegScavenger *RS) const {
   DEBUG(dbgs() << ">> SampleRegisterInfo::eliminateFrameIndex <<\n";);
 
   MachineInstr &MI = *II;
   const MachineFunction &MF = *MI.getParent()->getParent();
 
-  unsigned opIndex;
-  for (opIndex = 0; opIndex < MI.getNumOperands(); opIndex++) {
-    if (MI.getOperand(opIndex).isFI()) break;
-  }
-  assert(opIndex < MI.getNumOperands() && "Instr doesn't have FrameIndex operand!");
-
-  int FrameIndex = MI.getOperand(opIndex).getIndex();
+  int FrameIndex = MI.getOperand(FIOperandNum).getIndex();
   uint64_t stackSize = MF.getFrameInfo()->getStackSize();
   int64_t spOffset = MF.getFrameInfo()->getObjectOffset(FrameIndex);
-  int64_t Offset = spOffset + stackSize + MI.getOperand(opIndex+1).getImm();
+  int64_t Offset = spOffset + stackSize + MI.getOperand(FIOperandNum+1).getImm();
   unsigned FrameReg = Sample::SP;
 
   DEBUG(errs() 
@@ -114,8 +108,8 @@ eliminateFrameIndex(MachineBasicBlock::iterator II, int SPAdj,
         << "Offset     : " << Offset << "\n" << "<--------->\n");
 
   DEBUG(errs() << "Before:" << MI);
-  MI.getOperand(opIndex).ChangeToRegister(FrameReg, false);
-  MI.getOperand(opIndex+1).ChangeToImmediate(Offset);
+  MI.getOperand(FIOperandNum).ChangeToRegister(FrameReg, false);
+  MI.getOperand(FIOperandNum+1).ChangeToImmediate(Offset);
   DEBUG(errs() << "After:" << MI);
 }
 

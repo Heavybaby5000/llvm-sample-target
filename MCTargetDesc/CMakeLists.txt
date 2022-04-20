@@ -4,4 +4,4 @@ add_llvm_library(LLVMSampleDesc
   SampleMCAsmInfo.cpp
   SampleMCCodeEmitter.cpp
   SampleMCTargetDesc.cpp
-  )
+)

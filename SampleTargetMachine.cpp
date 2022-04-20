@@ -34,7 +34,9 @@ SampleTargetMachine(const Target &T, StringRef Triple,
       Subtarget(Triple, CPU, FS),
       InstrInfo(*this),
       FrameLowering(Subtarget),
-      TLInfo(*this), TSInfo(*this) {}
+      TLInfo(*this), TSInfo(*this) {
+  initAsmInfo();
+}
 
 namespace {
 /// Sample Code Generator Pass Configuration Options.

@@ -13,7 +13,6 @@
 
 #include "Sample.h"
 #include "SampleSubtarget.h"
-#include "llvm/MC/EDInstInfo.h"
 #include "llvm/MC/MCDisassembler.h"
 #include "llvm/MC/MCFixedLenDisassembler.h"
 #include "llvm/Support/MemoryObject.h"
@@ -22,8 +21,6 @@
 #include "llvm/MC/MCInst.h"
 #include "llvm/MC/MCRegisterInfo.h"
 #include "llvm/Support/MathExtras.h"
-
-#include "SampleGenEDInfo.inc"
 
 using namespace llvm;
 
@@ -47,18 +44,12 @@ public:
                               raw_ostream &vStream,
                               raw_ostream &cStream) const;
 
-  const EDInstInfo *getEDInfo() const;
-
 private:
   DecodeStatus readInstruction32(const MemoryObject &region,
                                  uint64_t address,
                                  uint64_t &size,
                                  uint32_t &insn) const;
 };
-
-const EDInstInfo *SampleDisassembler::getEDInfo() const {
-  return instInfoSample;
-}
 
 // Decoder tables for Sample register
 static const unsigned CPURegsTable[] = {
@@ -118,7 +109,7 @@ readInstruction32(const MemoryObject &region,
   uint8_t Bytes[4];
 
   // We want to read exactly 4 Bytes of data.
-  if (region.readBytes(address, 4, (uint8_t*)Bytes, NULL) == -1) {
+  if (region.readBytes(address, 4, (uint8_t*)Bytes) == -1) {
     size = 0;
     return MCDisassembler::Fail;
   }

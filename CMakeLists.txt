@@ -9,7 +9,6 @@ tablegen(LLVM SampleGenInstrInfo.inc -gen-instr-info)
 tablegen(LLVM SampleGenMCCodeEmitter.inc -gen-emitter -mc-emitter)
 tablegen(LLVM SampleGenRegisterInfo.inc -gen-register-info)
 tablegen(LLVM SampleGenSubtargetInfo.inc -gen-subtarget)
-tablegen(LLVM SampleGenEDInfo.inc -gen-enhanced-disassembly-info)
 
 add_public_tablegen_target(SampleCommonTableGen)
 
@@ -25,7 +24,7 @@ add_llvm_target(SampleCodeGen
   SampleSelectionDAGInfo.cpp
   SampleSubtarget.cpp
   SampleTargetMachine.cpp
-  )
+)
 
 add_dependencies(LLVMSampleCodeGen SampleCommonTableGen intrinsics_gen)
 

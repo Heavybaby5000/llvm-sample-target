@@ -50,7 +50,7 @@ class SampleTargetLowering : public TargetLowering {
   LowerFormalArguments(SDValue Chain, CallingConv::ID CallConv,
                        bool isVarArg,
                        const SmallVectorImpl<ISD::InputArg> &Ins,
-                       DebugLoc dl, SelectionDAG &DAG,
+                       SDLoc dl, SelectionDAG &DAG,
                        SmallVectorImpl<SDValue> &InVals) const;
 
   virtual SDValue
@@ -61,7 +61,7 @@ class SampleTargetLowering : public TargetLowering {
   LowerCallResult(SDValue Chain, SDValue InFlag,
                   CallingConv::ID CallConv, bool isVarArg,
                   const SmallVectorImpl<ISD::InputArg> &Ins,
-                  DebugLoc dl, SelectionDAG &DAG,
+                  SDLoc dl, SelectionDAG &DAG,
                   SmallVectorImpl<SDValue> &InVals) const;
 
   virtual SDValue
@@ -69,7 +69,7 @@ class SampleTargetLowering : public TargetLowering {
               CallingConv::ID CallConv, bool isVarArg,
               const SmallVectorImpl<ISD::OutputArg> &Outs,
               const SmallVectorImpl<SDValue> &OutVals,
-              DebugLoc dl, SelectionDAG &DAG) const;
+              SDLoc dl, SelectionDAG &DAG) const;
 
  private:
 };

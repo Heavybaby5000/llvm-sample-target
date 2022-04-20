@@ -53,12 +53,11 @@ static MCSubtargetInfo *createSampleMCSubtargetInfo(StringRef TT, StringRef CPU,
   return X;
 }
 
-static MCAsmInfo *createSampleMCAsmInfo(const Target &T, StringRef TT) {
-  MCAsmInfo *MAI = new SampleMCAsmInfo(T, TT);
+static MCAsmInfo *createSampleMCAsmInfo(const MCRegisterInfo &MRI, StringRef TT) {
+  MCAsmInfo *MAI = new SampleMCAsmInfo(TT);
 
-  MachineLocation Dst(MachineLocation::VirtualFP);
-  MachineLocation Src(Sample::SP, 0);
-  MAI->addInitialFrameState(0, Dst, Src);
+  MCCFIInstruction Inst = MCCFIInstruction::createDefCfa(0, Sample::SP, 0);
+  MAI->addInitialFrameState(Inst);
 
   return MAI;
 }
@@ -88,7 +87,7 @@ static MCStreamer *createMCStreamer(const Target &T, StringRef TT,
                                     bool NoExecStack) {
   Triple TheTriple(TT);
 
-  return createELFStreamer(Ctx, MAB, _OS, _Emitter, RelaxAll, NoExecStack);
+  return createELFStreamer(Ctx, NULL, MAB, _OS, _Emitter, RelaxAll, NoExecStack);
 }
 
 extern "C" void LLVMInitializeSampleTargetMC() {
