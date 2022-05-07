@@ -19,5 +19,5 @@
 type = Library
 name = SampleInfo
 parent = Sample
-required_libraries = MC Support Target
+required_libraries = Support
 add_to_library_groups = Sample

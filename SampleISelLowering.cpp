@@ -57,8 +57,8 @@ std::string getFlagsString(const ISD::ArgFlagsTy &Flags) {
 }
 
 SampleTargetLowering::
-SampleTargetLowering(SampleTargetMachine &TM)
-  : TargetLowering(TM, new TargetLoweringObjectFileELF()),
+SampleTargetLowering(const SampleTargetMachine &TM)
+  : TargetLowering(TM),
     Subtarget(*TM.getSubtargetImpl()) {
   DEBUG(dbgs() << ">> SampleTargetLowering::constructor <<\n");
 
@@ -70,15 +70,17 @@ SampleTargetLowering(SampleTargetMachine &TM)
   addRegisterClass(MVT::i32, &Sample::CPURegsRegClass);
 
   // (符号)拡張ロード命令が対応していない型の操作方法を登録
-  setLoadExtAction(ISD::EXTLOAD,  MVT::i1,  Promote);
-  setLoadExtAction(ISD::EXTLOAD,  MVT::i8,  Promote);
-  setLoadExtAction(ISD::EXTLOAD,  MVT::i16, Promote);
-  setLoadExtAction(ISD::ZEXTLOAD, MVT::i1,  Promote);
-  setLoadExtAction(ISD::ZEXTLOAD, MVT::i8,  Promote);
-  setLoadExtAction(ISD::ZEXTLOAD, MVT::i16, Promote);
-  setLoadExtAction(ISD::SEXTLOAD, MVT::i1,  Promote);
-  setLoadExtAction(ISD::SEXTLOAD, MVT::i8,  Promote);
-  setLoadExtAction(ISD::SEXTLOAD, MVT::i16, Promote);
+  for (MVT VT : MVT::integer_valuetypes()) {
+    setLoadExtAction(ISD::EXTLOAD,  VT, MVT::i1,  Promote);
+    setLoadExtAction(ISD::EXTLOAD,  VT, MVT::i8,  Promote);
+    setLoadExtAction(ISD::EXTLOAD,  VT, MVT::i16, Promote);
+    setLoadExtAction(ISD::ZEXTLOAD, VT, MVT::i1,  Promote);
+    setLoadExtAction(ISD::ZEXTLOAD, VT, MVT::i8,  Promote);
+    setLoadExtAction(ISD::ZEXTLOAD, VT, MVT::i16, Promote);
+    setLoadExtAction(ISD::SEXTLOAD, VT, MVT::i1,  Promote);
+    setLoadExtAction(ISD::SEXTLOAD, VT, MVT::i8,  Promote);
+    setLoadExtAction(ISD::SEXTLOAD, VT, MVT::i16, Promote);
+  }
 
   // 関数のアラインメント
   setMinFunctionAlignment(2);
@@ -118,7 +120,7 @@ LowerFormalArguments(SDValue Chain, CallingConv::ID CallConv,
   // Assign locations to all of the incoming arguments.
   SmallVector<CCValAssign, 16> ArgLocs;
   CCState CCInfo(CallConv, isVarArg, DAG.getMachineFunction(),
-                 getTargetMachine(), ArgLocs, *DAG.getContext());
+                 ArgLocs, *DAG.getContext());
   CCInfo.AnalyzeFormalArguments(Ins, CC_Sample);
 
   for (unsigned i = 0, e = ArgLocs.size(); i != e; ++i) {
@@ -203,7 +205,7 @@ LowerCall(CallLoweringInfo &CLI,
   // 関数のオペランドを解析してオペランドをレジスタに割り当てる
   SmallVector<CCValAssign, 16> ArgLocs;
   CCState CCInfo(CallConv, isVarArg, DAG.getMachineFunction(),
-		 getTargetMachine(), ArgLocs, *DAG.getContext());
+		             ArgLocs, *DAG.getContext());
 
   CCInfo.AnalyzeCallOperands(Outs, CC_Sample);
 
@@ -288,7 +290,7 @@ LowerCall(CallLoweringInfo &CLI,
   if (InFlag.getNode())
     Ops.push_back(InFlag);
 
-  InChain = DAG.getNode(SampleISD::Call, dl, NodeTys, &Ops[0], Ops.size());
+  InChain = DAG.getNode(SampleISD::Call, dl, NodeTys, Ops);
   InFlag = InChain.getValue(1);
 
   // 関数呼び出し終了のNode
@@ -314,7 +316,7 @@ LowerCallResult(SDValue Chain, SDValue InFlag,
   // Assign locations to each value returned by this call.
   SmallVector<CCValAssign, 16> RVLocs;
   CCState CCInfo(CallConv, isVarArg, DAG.getMachineFunction(),
-		 getTargetMachine(), RVLocs, *DAG.getContext());
+		             RVLocs, *DAG.getContext());
 
   CCInfo.AnalyzeCallResult(Ins, RetCC_Sample);
 
@@ -344,7 +346,7 @@ LowerReturn(SDValue Chain,
 
   SmallVector<CCValAssign, 16> RVLocs;
   CCState CCInfo(CallConv, isVarArg, DAG.getMachineFunction(),
-		 getTargetMachine(), RVLocs, *DAG.getContext());
+		             RVLocs, *DAG.getContext());
 
   // 戻り値を解析する
   CCInfo.AnalyzeReturn(Outs, RetCC_Sample);
@@ -379,6 +381,5 @@ LowerReturn(SDValue Chain,
     RetOps.push_back(Flag);
 
   // 常に "ret $ra" を生成
-  return DAG.getNode(SampleISD::Ret, dl, MVT::Other, &RetOps[0],
-                     RetOps.size());
+  return DAG.getNode(SampleISD::Ret, dl, MVT::Other, RetOps);
 }

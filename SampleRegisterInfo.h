@@ -36,10 +36,6 @@ struct SampleRegisterInfo : public SampleGenRegisterInfo {
 
   BitVector getReservedRegs(const MachineFunction &MF) const /*override*/;
 
-  void eliminateCallFramePseudoInstr(MachineFunction &MF,
-                                     MachineBasicBlock &MBB,
-                                     MachineBasicBlock::iterator I) const /*override*/;
-
   /// Stack Frame Processing Methods
   void eliminateFrameIndex(MachineBasicBlock::iterator II,
                            int SPAdj, unsigned FIOperandNum,

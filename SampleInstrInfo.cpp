@@ -22,14 +22,16 @@
 #include "llvm/Support/TargetRegistry.h"
 #include "llvm/ADT/STLExtras.h"
 
+#define DEBUG_TYPE "sample-instr-info"
+
 #define GET_INSTRINFO_CTOR_DTOR
 #include "SampleGenInstrInfo.inc"
 
 using namespace llvm;
 
-SampleInstrInfo::SampleInstrInfo(SampleTargetMachine &tm)
+SampleInstrInfo::SampleInstrInfo(const SampleSubtarget &STI)
   : SampleGenInstrInfo(Sample::ADJCALLSTACKDOWN, Sample::ADJCALLSTACKUP),
-    TM(tm),
+    Subtarget(STI),
     RI(*this){}
 
 const SampleRegisterInfo &SampleInstrInfo::getRegisterInfo() const {

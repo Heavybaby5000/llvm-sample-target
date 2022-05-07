@@ -12,6 +12,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "SampleTargetMachine.h"
+#include "SampleTargetObjectFile.h"
 #include "Sample.h"
 #include "llvm/PassManager.h"
 #include "llvm/CodeGen/Passes.h"
@@ -30,11 +31,8 @@ SampleTargetMachine(const Target &T, StringRef Triple,
                     Reloc::Model RM, CodeModel::Model CM,
                     CodeGenOpt::Level OL)
     : LLVMTargetMachine(T, Triple, CPU, FS, Options, RM, CM, OL),
-      DL("e-p:32:32:32-i8:8:32-i16:16:32-i64:64:64-n32"),
-      Subtarget(Triple, CPU, FS),
-      InstrInfo(*this),
-      FrameLowering(Subtarget),
-      TLInfo(*this), TSInfo(*this) {
+      TLOF(make_unique<SampleTargetObjectFile>()),
+      Subtarget(Triple, CPU, FS, *this) {
   initAsmInfo();
 }
 

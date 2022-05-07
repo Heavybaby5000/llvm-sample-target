@@ -14,13 +14,7 @@
 #ifndef SAMPLE_TARGETMACHINE_H
 #define SAMPLE_TARGETMACHINE_H
 
-#include "SampleFrameLowering.h"
-#include "SampleInstrInfo.h"
-#include "SampleISelLowering.h"
-#include "SampleSelectionDAGInfo.h"
-#include "SampleRegisterInfo.h"
 #include "SampleSubtarget.h"
-#include "llvm/IR/DataLayout.h"
 #include "llvm/Target/TargetMachine.h"
 #include "llvm/Target/TargetFrameLowering.h"
 #include "llvm/Support/Debug.h"
@@ -30,12 +24,8 @@ namespace llvm {
 class Module;
 
 class SampleTargetMachine : public LLVMTargetMachine {
-  const DataLayout DL;
+  std::unique_ptr<TargetLoweringObjectFile> TLOF;
   SampleSubtarget Subtarget;
-  SampleInstrInfo InstrInfo;
-  SampleFrameLowering FrameLowering;
-  SampleTargetLowering TLInfo;
-  SampleSelectionDAGInfo TSInfo;
 
  public:
   SampleTargetMachine(const Target &T, StringRef TT,
@@ -43,30 +33,16 @@ class SampleTargetMachine : public LLVMTargetMachine {
                       Reloc::Model RM, CodeModel::Model CM,
                       CodeGenOpt::Level OL);
 
-  virtual const SampleInstrInfo *getInstrInfo() const {
-    return &InstrInfo;
-  }
   virtual const SampleSubtarget *getSubtargetImpl() const {
     return &Subtarget;
-  }
-  virtual const SampleRegisterInfo *getRegisterInfo() const {
-    return &InstrInfo.getRegisterInfo();
-  }
-  virtual const DataLayout *getDataLayout() const {
-    return &DL;
-  }
-  virtual const SampleTargetLowering *getTargetLowering() const {
-    return &TLInfo;
-  }
-  virtual const SampleFrameLowering *getFrameLowering() const{
-    return &FrameLowering;
-  }
-  virtual const SampleSelectionDAGInfo* getSelectionDAGInfo() const {
-    return &TSInfo;
   }
 
   // Pass Pipeline Configuration
   virtual TargetPassConfig *createPassConfig(PassManagerBase &PM);
+
+  virtual TargetLoweringObjectFile *getObjFileLowering() const {
+    return TLOF.get();
+  }
 };
 } // end namespace llvm
 

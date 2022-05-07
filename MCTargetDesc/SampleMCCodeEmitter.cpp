@@ -45,32 +45,38 @@ class SampleMCCodeEmitter : public MCCodeEmitter {
   // EncodeInstruction - AsmStreamerから実行される
   // 命令をバイナリにして出力する
   void EncodeInstruction(const MCInst &MI, raw_ostream &OS,
-                         SmallVectorImpl<MCFixup> &Fixups) const;
+                         SmallVectorImpl<MCFixup> &Fixups,
+                         const MCSubtargetInfo &STI) const;
 
  private:
   // getBinaryCodeForInstr - TableGenが自動生成
   // 命令のバイナリエンコーディングを取得
   uint64_t getBinaryCodeForInstr(const MCInst &MI,
-                                 SmallVectorImpl<MCFixup> &Fixups) const;
+                                 SmallVectorImpl<MCFixup> &Fixups,
+                                 const MCSubtargetInfo &STI) const;
 
   // getMachineOpValue - TableGenの中から必ず参照される
   // オペランドのバイナリエンコーディングを取得
   unsigned getMachineOpValue(const MCInst &MI,const MCOperand &MO,
-                             SmallVectorImpl<MCFixup> &Fixups) const;
+                             SmallVectorImpl<MCFixup> &Fixups,
+                             const MCSubtargetInfo &STI) const;
 
   // getMemEncoding - TableGenのDecoderMethodで指定
   // load/storeのオペランドのバイナリエンコーディングを取得
   unsigned getMemEncoding(const MCInst &MI, unsigned OpNo,
-                          SmallVectorImpl<MCFixup> &Fixups) const;
+                          SmallVectorImpl<MCFixup> &Fixups,
+                          const MCSubtargetInfo &STI) const;
 
   // getMoveTargetOpValue - TableGenのDecoderMethodで指定
   // moveのオペランドのバイナリエンコーディングを取得
   unsigned getMoveTargetOpValue(const MCInst &MI, unsigned OpNo,
-                                SmallVectorImpl<MCFixup> &Fixups) const;
+                                SmallVectorImpl<MCFixup> &Fixups,
+                                const MCSubtargetInfo &STI) const;
 
   // call命令のオペランドのバイナリエンコーディングを取得
   unsigned getCallTargetOpValue(const MCInst &MI, unsigned OpNo,
-                                SmallVectorImpl<MCFixup> &Fixups) const;
+                                SmallVectorImpl<MCFixup> &Fixups,
+                                const MCSubtargetInfo &STI) const;
 
 
 }; // class SampleMCCodeEmitter
@@ -87,9 +93,10 @@ MCCodeEmitter *llvm::createSampleMCCodeEmitter(const MCInstrInfo &MCII,
 /// EncodeInstruction - Emit the instruction.
 void SampleMCCodeEmitter::
 EncodeInstruction(const MCInst &MI, raw_ostream &OS,
-                  SmallVectorImpl<MCFixup> &Fixups) const
+                  SmallVectorImpl<MCFixup> &Fixups,
+                  const MCSubtargetInfo &STI) const
 {
-  uint32_t Binary = getBinaryCodeForInstr(MI, Fixups);
+  uint32_t Binary = getBinaryCodeForInstr(MI, Fixups, STI);
 
   // For now all instructions are 4 bytes
   int Size = 4; // FIXME: Have Desc.getSize() return the correct value!
@@ -104,7 +111,8 @@ EncodeInstruction(const MCInst &MI, raw_ostream &OS,
 /// operand requires relocation, record the relocation and return zero.
 unsigned SampleMCCodeEmitter::
 getMachineOpValue(const MCInst &MI, const MCOperand &MO,
-                  SmallVectorImpl<MCFixup> &Fixups) const {
+                  SmallVectorImpl<MCFixup> &Fixups,
+                  const MCSubtargetInfo &STI) const {
   if (MO.isReg()) {
     unsigned Reg = MO.getReg();
     unsigned RegNo = getSampleRegisterNumbering(Reg);
@@ -127,12 +135,13 @@ getMachineOpValue(const MCInst &MI, const MCOperand &MO,
 /// If the offset operand requires relocation, record the relocation.
 unsigned SampleMCCodeEmitter::
 getMemEncoding(const MCInst &MI, unsigned OpNo,
-               SmallVectorImpl<MCFixup> &Fixups) const {
+               SmallVectorImpl<MCFixup> &Fixups,
+               const MCSubtargetInfo &STI) const {
   //llvm_unreachable("not implemented");
   // Base register is encoded in bits 19-16, offset is encoded in bits 15-0.
   assert(MI.getOperand(OpNo).isReg());
-  unsigned RegBits = getMachineOpValue(MI, MI.getOperand(OpNo),Fixups) << 16;
-  unsigned OffBits = getMachineOpValue(MI, MI.getOperand(OpNo+1), Fixups);
+  unsigned RegBits = getMachineOpValue(MI, MI.getOperand(OpNo),Fixups, STI) << 16;
+  unsigned OffBits = getMachineOpValue(MI, MI.getOperand(OpNo+1), Fixups, STI);
 
   return (OffBits & 0xFFFF) | RegBits;
 }
@@ -141,9 +150,10 @@ getMemEncoding(const MCInst &MI, unsigned OpNo,
 /// target operand.
 unsigned SampleMCCodeEmitter::
 getMoveTargetOpValue(const MCInst &MI, unsigned OpNo,
-                     SmallVectorImpl<MCFixup> &Fixups) const {
+                     SmallVectorImpl<MCFixup> &Fixups,
+                     const MCSubtargetInfo &STI) const {
   assert(MI.getOperand(OpNo).isImm());
-  unsigned value = getMachineOpValue(MI, MI.getOperand(OpNo),Fixups);
+  unsigned value = getMachineOpValue(MI, MI.getOperand(OpNo),Fixups, STI);
   return value & 0xFFFFF;
 }
 
@@ -152,7 +162,8 @@ getMoveTargetOpValue(const MCInst &MI, unsigned OpNo,
 /// record the relocation and return zero.
 unsigned SampleMCCodeEmitter::
 getCallTargetOpValue(const MCInst &MI, unsigned OpNo,
-                     SmallVectorImpl<MCFixup> &Fixups) const {
+                     SmallVectorImpl<MCFixup> &Fixups,
+                     const MCSubtargetInfo &STI) const {
 
   const MCOperand &MO = MI.getOperand(OpNo);
   assert(MO.isExpr() && "getCallTargetOpValue expects only expressions");

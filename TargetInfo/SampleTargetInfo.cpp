@@ -12,6 +12,8 @@
 #include "llvm/Support/TargetRegistry.h"
 using namespace llvm;
 
+#define DEBUG_TYPE "sample-target-info"
+
 Target llvm::TheSampleTarget;
 
 extern "C" void LLVMInitializeSampleTargetInfo() { 

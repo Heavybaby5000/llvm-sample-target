@@ -22,7 +22,7 @@ class SampleTargetMachine;
 
 class SampleSelectionDAGInfo : public TargetSelectionDAGInfo {
 public:
-  explicit SampleSelectionDAGInfo(const SampleTargetMachine &TM);
+  explicit SampleSelectionDAGInfo(const DataLayout *DL);
   ~SampleSelectionDAGInfo();
 };
 } // end of namespace llvm

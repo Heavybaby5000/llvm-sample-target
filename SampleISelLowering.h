@@ -16,7 +16,6 @@
 #define SAMPLE_ISELLOWERING_H
 
 #include "Sample.h"
-#include "SampleSubtarget.h"
 #include "llvm/CodeGen/SelectionDAG.h"
 #include "llvm/Target/TargetLowering.h"
 
@@ -42,7 +41,7 @@ class SampleTargetLowering : public TargetLowering {
   const SampleSubtarget &Subtarget;
 
  public:
-  explicit SampleTargetLowering(SampleTargetMachine &TM);
+  explicit SampleTargetLowering(const SampleTargetMachine &TM);
 
   /// LowerOperation - Provide custom lowering hooks for some operations.
   virtual SDValue LowerOperation(SDValue Op, SelectionDAG &DAG) const;

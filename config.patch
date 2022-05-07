@@ -1,8 +1,8 @@
 diff --git a/llvm/CMakeLists.txt b/llvm/CMakeLists.txt
-index a68e7e163c52..da2617746dae 100644
+index cfa32cf4bc5a..5a92a9d1839e 100644
 --- a/llvm/CMakeLists.txt
 +++ b/llvm/CMakeLists.txt
-@@ -110,6 +110,7 @@ set(LLVM_ALL_TARGETS
+@@ -168,6 +168,7 @@ set(LLVM_ALL_TARGETS
    SystemZ
    X86
    XCore
@@ -11,81 +11,94 @@ index a68e7e163c52..da2617746dae 100644
  
  # List of targets with JIT support:
 diff --git a/llvm/include/llvm/ADT/Triple.h b/llvm/include/llvm/ADT/Triple.h
-index 84e0b29d1fe0..c1f9252c2e7a 100644
+index 8a685995256b..d56714cd8122 100644
 --- a/llvm/include/llvm/ADT/Triple.h
 +++ b/llvm/include/llvm/ADT/Triple.h
-@@ -71,7 +71,8 @@ public:
-     le32,    // le32: generic little-endian 32-bit CPU (PNaCl / Emscripten)
-     amdil,   // amdil: amd IL
-     spir,    // SPIR: standard portable IR for OpenCL 32-bit version
--    spir64   // SPIR: standard portable IR for OpenCL 64-bit version
-+    spir64,  // SPIR: standard portable IR for OpenCL 64-bit version
-+    sample   // Sample: sample
+@@ -80,7 +80,8 @@ public:
+     hsail64,    // AMD HSAIL with 64-bit pointers
+     spir,       // SPIR: standard portable IR for OpenCL 32-bit version
+     spir64,     // SPIR: standard portable IR for OpenCL 64-bit version
+-    kalimba     // Kalimba: generic kalimba
++    kalimba,    // Kalimba: generic kalimba
++    sample      // Sample: sample
    };
-   enum VendorType {
-     UnknownVendor,
+   enum SubArchType {
+     NoSubArch,
+diff --git a/llvm/include/llvm/IR/ValueMap.h b/llvm/include/llvm/IR/ValueMap.h
+index f2ea405f1428..a1ab2a500f40 100644
+--- a/llvm/include/llvm/IR/ValueMap.h
++++ b/llvm/include/llvm/IR/ValueMap.h
+@@ -101,7 +101,7 @@ public:
+ 
+   ~ValueMap() {}
+ 
+-  bool hasMD() const { return MDMap; }
++  bool hasMD() const { return bool(MDMap); }
+   MDMapT &MD() {
+     if (!MDMap)
+       MDMap.reset(new MDMapT);
 diff --git a/llvm/lib/Support/Triple.cpp b/llvm/lib/Support/Triple.cpp
-index 6c978a0244bc..47651009e9b8 100644
+index 0838e90baaec..59e6df5abfca 100644
 --- a/llvm/lib/Support/Triple.cpp
 +++ b/llvm/lib/Support/Triple.cpp
-@@ -45,6 +45,7 @@ const char *Triple::getArchTypeName(ArchType Kind) {
-   case amdil:   return "amdil";
-   case spir:    return "spir";
-   case spir64:  return "spir64";
-+  case sample:  return "sample";
+@@ -54,6 +54,7 @@ const char *Triple::getArchTypeName(ArchType Kind) {
+   case spir:        return "spir";
+   case spir64:      return "spir64";
+   case kalimba:     return "kalimba";
++  case sample:      return "sample";
    }
  
    llvm_unreachable("Invalid ArchType!");
-@@ -187,6 +188,7 @@ Triple::ArchType Triple::getArchTypeForLLVMName(StringRef Name) {
-     .Case("amdil", amdil)
+@@ -223,6 +224,7 @@ Triple::ArchType Triple::getArchTypeForLLVMName(StringRef Name) {
      .Case("spir", spir)
      .Case("spir64", spir64)
+     .Case("kalimba", kalimba)
 +    .Case("sample", sample)
      .Default(UnknownArch);
  }
  
-@@ -250,6 +252,7 @@ static Triple::ArchType parseArch(StringRef ArchName) {
-     .Case("amdil", Triple::amdil)
+@@ -318,6 +320,7 @@ static Triple::ArchType parseArch(StringRef ArchName) {
      .Case("spir", Triple::spir)
      .Case("spir64", Triple::spir64)
+     .StartsWith("kalimba", Triple::kalimba)
 +    .Case("sample", Triple::sample)
      .Default(Triple::UnknownArch);
  }
  
-@@ -688,6 +691,7 @@ static unsigned getArchPointerBitWidth(llvm::Triple::ArchType Arch) {
-   case llvm::Triple::x86:
-   case llvm::Triple::xcore:
+@@ -878,6 +881,7 @@ static unsigned getArchPointerBitWidth(llvm::Triple::ArchType Arch) {
+   case llvm::Triple::hsail:
    case llvm::Triple::spir:
+   case llvm::Triple::kalimba:
 +  case llvm::Triple::sample:
      return 32;
  
    case llvm::Triple::aarch64:
-@@ -743,6 +747,7 @@ Triple Triple::get32BitArchVariant() const {
-   case Triple::thumb:
+@@ -944,6 +948,7 @@ Triple Triple::get32BitArchVariant() const {
+   case Triple::thumbeb:
    case Triple::x86:
    case Triple::xcore:
 +  case Triple::sample:
      // Already 32-bit.
      break;
  
-@@ -770,6 +775,7 @@ Triple Triple::get64BitArchVariant() const {
-   case Triple::tce:
+@@ -975,6 +980,7 @@ Triple Triple::get64BitArchVariant() const {
    case Triple::thumb:
+   case Triple::thumbeb:
    case Triple::xcore:
 +  case Triple::sample:
      T.setArch(UnknownArch);
      break;
  
 diff --git a/llvm/lib/Target/LLVMBuild.txt b/llvm/lib/Target/LLVMBuild.txt
-index 98d26bcac8af..58a6e7049c82 100644
+index 1b0837cb3b54..509dbdb3ae19 100644
 --- a/llvm/lib/Target/LLVMBuild.txt
 +++ b/llvm/lib/Target/LLVMBuild.txt
 @@ -16,7 +16,7 @@
  ;===------------------------------------------------------------------------===;
  
  [common]
--subdirectories = AArch64 ARM CppBackend Hexagon MSP430 NVPTX Mips PowerPC R600 Sparc SystemZ X86 XCore
-+subdirectories = AArch64 ARM CppBackend Hexagon MSP430 NVPTX Mips PowerPC R600 Sparc SystemZ X86 XCore Sample
+-subdirectories = ARM AArch64 CppBackend Hexagon MSP430 NVPTX Mips PowerPC R600 Sparc SystemZ X86 XCore
++subdirectories = ARM AArch64 CppBackend Hexagon MSP430 NVPTX Mips PowerPC R600 Sparc SystemZ X86 XCore Sample
  
  ; This is a special group whose required libraries are extended (by llvm-build)
  ; with the best execution engine (the native JIT, if available, or the

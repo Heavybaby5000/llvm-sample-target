@@ -15,7 +15,7 @@
 #include "SampleTargetMachine.h"
 using namespace llvm;
 
-SampleSelectionDAGInfo::SampleSelectionDAGInfo(const SampleTargetMachine &TM)
-    : TargetSelectionDAGInfo(TM) {}
+SampleSelectionDAGInfo::SampleSelectionDAGInfo(const DataLayout *DL)
+    : TargetSelectionDAGInfo(DL) {}
 
 SampleSelectionDAGInfo::~SampleSelectionDAGInfo() {}

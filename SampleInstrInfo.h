@@ -31,10 +31,10 @@ namespace Sample {
 }
 
 class SampleInstrInfo : public SampleGenInstrInfo {
-  SampleTargetMachine &TM;
+  const SampleSubtarget &Subtarget;
   const SampleRegisterInfo RI;
 public:
-  explicit SampleInstrInfo(SampleTargetMachine &TM);
+  explicit SampleInstrInfo(const SampleSubtarget &STI);
 
   /// getRegisterInfo - TargetInstrInfo is a superset of MRegister info.  As
   /// such, whenever a client has an instance of instruction info, it should

@@ -28,6 +28,8 @@
 
 using namespace llvm;
 
+#define DEBUG_TYPE "sample-asm-backend"
+
 // Prepare value for the target space for it
 static unsigned adjustFixupValue(unsigned Kind, uint64_t Value) {
   DEBUG(dbgs() << ">> adjustFixupValue: kind:" << Kind << " Value:" << Value << "\n");
@@ -59,7 +61,7 @@ public:
   /// data fragment, at the offset specified by the fixup and following the
   /// fixup kind as appropriate.
   void applyFixup(const MCFixup &Fixup, char *Data, unsigned DataSize,
-                  uint64_t Value) const;
+                  uint64_t Value, bool IsPCRel) const;
 
   unsigned getNumFixupKinds() const { return Sample::NumTargetFixupKinds; }
 
@@ -110,7 +112,7 @@ public:
 
 void SampleAsmBackend::
 applyFixup(const MCFixup &Fixup, char *Data, unsigned DataSize,
-           uint64_t Value) const {
+           uint64_t Value, bool IsPCRel) const {
   MCFixupKind Kind = Fixup.getKind();
   Value = adjustFixupValue((unsigned)Kind, Value);
 

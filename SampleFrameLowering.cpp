@@ -25,11 +25,21 @@
 #include "llvm/Target/TargetOptions.h"
 #include "llvm/Support/CommandLine.h"
 
+#define DEBUG_TYPE "sample-frame-lowering"
+
 using namespace llvm;
 
 bool SampleFrameLowering::
 hasFP(const MachineFunction &MF) const {
   return false;
+}
+
+// ADJCALLSTACKDOWNとADJCALLSTACKUPを単純に削除する
+void SampleFrameLowering::
+eliminateCallFramePseudoInstr(MachineFunction &MF, MachineBasicBlock &MBB,
+                              MachineBasicBlock::iterator I) const {
+  DEBUG(dbgs() << ">> SampleRegisterInfo::eliminateCallFramePseudoInstr <<\n";);
+  MBB.erase(I);
 }
 
 void SampleFrameLowering::
@@ -40,7 +50,7 @@ emitPrologue(MachineFunction &MF) const {
   MachineFrameInfo *MFI = MF.getFrameInfo();
 
   const SampleInstrInfo &TII =
-    *static_cast<const SampleInstrInfo*>(MF.getTarget().getInstrInfo());
+    *static_cast<const SampleInstrInfo*>(MF.getSubtarget().getInstrInfo());
 
   MachineBasicBlock::iterator MBBI = MBB.begin();
   DebugLoc dl = MBBI != MBB.end() ? MBBI->getDebugLoc() : DebugLoc();
@@ -65,7 +75,7 @@ emitEpilogue(MachineFunction &MF, MachineBasicBlock &MBB) const {
   MachineBasicBlock::iterator MBBI = MBB.getLastNonDebugInstr();
   MachineFrameInfo *MFI            = MF.getFrameInfo();
   const SampleInstrInfo &TII =
-    *static_cast<const SampleInstrInfo*>(MF.getTarget().getInstrInfo());
+    *static_cast<const SampleInstrInfo*>(MF.getSubtarget().getInstrInfo());
   DebugLoc dl = MBBI->getDebugLoc();
 
   // Get the number of bytes from FrameInfo

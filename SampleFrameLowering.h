@@ -15,7 +15,6 @@
 #define SAMPLE_FRAMELOWERING_H
 
 #include "Sample.h"
-#include "SampleSubtarget.h"
 #include "llvm/Target/TargetFrameLowering.h"
 
 namespace llvm {
@@ -34,6 +33,11 @@ class SampleFrameLowering : public TargetFrameLowering {
   /// the function.
   void emitPrologue(MachineFunction &MF) const /*override*/;
   void emitEpilogue(MachineFunction &MF, MachineBasicBlock &MBB) const /*override*/;
+
+  void eliminateCallFramePseudoInstr(MachineFunction &MF,
+                                     MachineBasicBlock &MBB,
+                                     MachineBasicBlock::iterator I) const /*override*/;
+
   bool hasFP(const MachineFunction &MF) const /*override*/;
 };
 } // End llvm namespace

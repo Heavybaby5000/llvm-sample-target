@@ -21,7 +21,6 @@
 #include "llvm/IR/Constants.h"
 #include "llvm/IR/DerivedTypes.h"
 #include "llvm/IR/Module.h"
-#include "llvm/Assembly/Writer.h"
 #include "llvm/CodeGen/AsmPrinter.h"
 #include "llvm/CodeGen/MachineModuleInfo.h"
 #include "llvm/CodeGen/MachineFunctionPass.h"
@@ -31,7 +30,7 @@
 #include "llvm/MC/MCInst.h"
 #include "llvm/MC/MCStreamer.h"
 #include "llvm/MC/MCSymbol.h"
-#include "llvm/Target/Mangler.h"
+#include "llvm/IR/Mangler.h"
 #include "llvm/Support/TargetRegistry.h"
 using namespace llvm;
 
@@ -57,7 +56,7 @@ EmitInstruction(const MachineInstr *MI) {
   SampleMCInstLower MCInstLowering(OutContext, *Mang, *this);
   MCInst TmpInst;
   MCInstLowering.Lower(MI, TmpInst);
-  OutStreamer.EmitInstruction(TmpInst);
+  EmitToStreamer(OutStreamer, TmpInst);
 }
 
 // Force static initialization.

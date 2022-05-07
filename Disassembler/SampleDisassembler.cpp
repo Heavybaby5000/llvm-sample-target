@@ -15,12 +15,13 @@
 #include "SampleSubtarget.h"
 #include "llvm/MC/MCDisassembler.h"
 #include "llvm/MC/MCFixedLenDisassembler.h"
-#include "llvm/Support/MemoryObject.h"
 #include "llvm/Support/TargetRegistry.h"
 #include "llvm/MC/MCSubtargetInfo.h"
 #include "llvm/MC/MCInst.h"
 #include "llvm/MC/MCRegisterInfo.h"
 #include "llvm/Support/MathExtras.h"
+
+#define DEBUG_TYPE "sample-disassembler"
 
 using namespace llvm;
 
@@ -31,21 +32,21 @@ class SampleDisassembler : public MCDisassembler {
 public:
   /// Constructor     - Initializes the disassembler.
   ///
-  SampleDisassembler(const MCSubtargetInfo &STI)
-      : MCDisassembler(STI) {}
+  SampleDisassembler(const MCSubtargetInfo &STI, MCContext &Ctx)
+      : MCDisassembler(STI, Ctx) {}
 
   ~SampleDisassembler() {}
 
   /// getInstruction - See MCDisassembler.
   DecodeStatus getInstruction(MCInst &instr,
                               uint64_t &size,
-                              const MemoryObject &region,
+                              ArrayRef<uint8_t> Bytes,
                               uint64_t address,
                               raw_ostream &vStream,
                               raw_ostream &cStream) const;
 
 private:
-  DecodeStatus readInstruction32(const MemoryObject &region,
+  DecodeStatus readInstruction32(ArrayRef<uint8_t> Bytes,
                                  uint64_t address,
                                  uint64_t &size,
                                  uint32_t &insn) const;
@@ -87,8 +88,9 @@ static DecodeStatus DecodeCallTarget(MCInst &Inst,
 
 static MCDisassembler *createSampleDisassembler(
                        const Target &T,
-                       const MCSubtargetInfo &STI) {
-  return new SampleDisassembler(STI);
+                       const MCSubtargetInfo &STI,
+                       MCContext &Ctx) {
+  return new SampleDisassembler(STI, Ctx);
 }
 
 extern "C" void LLVMInitializeSampleDisassembler() {
@@ -102,14 +104,12 @@ extern "C" void LLVMInitializeSampleDisassembler() {
   /// readInstruction - read four bytes from the MemoryObject
   /// and return 32 bit word sorted according to the given endianess
 DecodeStatus SampleDisassembler::
-readInstruction32(const MemoryObject &region,
+readInstruction32(ArrayRef<uint8_t> Bytes,
                   uint64_t address,
                   uint64_t &size,
                   uint32_t &insn) const {
-  uint8_t Bytes[4];
-
   // We want to read exactly 4 Bytes of data.
-  if (region.readBytes(address, 4, (uint8_t*)Bytes) == -1) {
+  if (Bytes.size() < 4) {
     size = 0;
     return MCDisassembler::Fail;
   }
@@ -126,13 +126,13 @@ readInstruction32(const MemoryObject &region,
 DecodeStatus SampleDisassembler::
 getInstruction(MCInst &instr,
                uint64_t &Size,
-               const MemoryObject &Region,
+               ArrayRef<uint8_t> Bytes,
                uint64_t Address,
                raw_ostream &vStream,
                raw_ostream &cStream) const {
   uint32_t Insn;
 
-  DecodeStatus Result = readInstruction32(Region, Address, Size,
+  DecodeStatus Result = readInstruction32(Bytes, Address, Size,
                                           Insn);
   if (Result == MCDisassembler::Fail)
     return MCDisassembler::Fail;

@@ -21,17 +21,6 @@
 using namespace llvm;
 
 namespace {
-struct RelEntry {
-  RelEntry(const ELFRelocationEntry &R, const MCSymbol *S, int64_t O) :
-      Reloc(R), Sym(S), Offset(O) {}
-  ELFRelocationEntry Reloc;
-  const MCSymbol *Sym;
-  int64_t Offset;
-};
-
-typedef std::list<RelEntry> RelLs;
-typedef RelLs::iterator RelLsIter;
-
 class SampleELFObjectWriter : public MCELFObjectTargetWriter {
  public:
   SampleELFObjectWriter(uint8_t OSABI);
@@ -40,8 +29,7 @@ class SampleELFObjectWriter : public MCELFObjectTargetWriter {
   // オブジェクトを生成するときやリンク時にアドレス解決するために
   // ELFObjectWriterなどから参照される
   virtual unsigned GetRelocType(const MCValue &Target, const MCFixup &Fixup,
-                                bool IsPCRel, bool IsRelocWithSymbol,
-                                int64_t Addend) const;
+                                bool IsPCRel) const;
 };
 }
 
@@ -55,9 +43,7 @@ SampleELFObjectWriter::~SampleELFObjectWriter() {}
 unsigned SampleELFObjectWriter::
 GetRelocType(const MCValue &Target,
              const MCFixup &Fixup,
-             bool IsPCRel,
-             bool IsRelocWithSymbol,
-             int64_t Addend) const {
+             bool IsPCRel) const {
   // determine the type of the relocation
   unsigned Type = (unsigned)ELF::R_MIPS_NONE;
   unsigned Kind = (unsigned)Fixup.getKind();

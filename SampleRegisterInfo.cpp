@@ -32,7 +32,7 @@
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/ADT/BitVector.h"
 #include "llvm/ADT/STLExtras.h"
-#include "llvm/DebugInfo.h"
+#include "llvm/IR/DebugInfo.h"
 
 #include "MCTargetDesc/SampleMCTargetDesc.h"
 
@@ -74,14 +74,6 @@ getReservedRegs(const MachineFunction &MF) const {
     Reserved.set(ReservedCPURegs[I]);
 
   return Reserved;
-}
-
-// ADJCALLSTACKDOWNとADJCALLSTACKUPを単純に削除する
-void SampleRegisterInfo::
-eliminateCallFramePseudoInstr(MachineFunction &MF, MachineBasicBlock &MBB,
-                              MachineBasicBlock::iterator I) const {
-  DEBUG(dbgs() << ">> SampleRegisterInfo::eliminateCallFramePseudoInstr <<\n";);
-  MBB.erase(I);
 }
 
 // FrameIndexをスタックポインタに置き換える
