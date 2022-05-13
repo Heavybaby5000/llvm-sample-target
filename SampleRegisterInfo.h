@@ -21,7 +21,6 @@
 #include "SampleGenRegisterInfo.inc"
 
 namespace llvm {
-class SampleSubtarget;
 class TargetInstrInfo;
 class Type;
 

@@ -1,7 +1,7 @@
 ## setup sample target
 $ git clone https://github.com/llvm/llvm-project.git
 $ cd llvm-project/llvm/lib/Target
-$ git checkout llvmorg-3.6.0
+$ git checkout llvmorg-3.8.0
 $ git clone https://github.com/Heavybaby5000/llvm-sample-target.git Sample
 $ cd - && cd llvm-project
 $ patch -p1 < ./llvm/lib/Target/Sample/config.patch

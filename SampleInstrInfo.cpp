@@ -13,6 +13,7 @@
 
 #include "SampleInstrInfo.h"
 #include "SampleTargetMachine.h"
+#include "SampleSubtarget.h"
 #include "SampleMachineFunction.h"
 #include "MCTargetDesc/SampleMCTargetDesc.h"
 #include "InstPrinter/SampleInstPrinter.h"
@@ -109,7 +110,7 @@ storeRegToStackSlot(MachineBasicBlock &MBB, MachineBasicBlock::iterator I,
   MachineFrameInfo &MFI = *MF.getFrameInfo();
 
   MachineMemOperand *MMO =
-    MF.getMachineMemOperand(MachinePointerInfo::getFixedStack(FI),
+    MF.getMachineMemOperand(MachinePointerInfo::getFixedStack(MF, FI),
                             MachineMemOperand::MOStore,
                             MFI.getObjectSize(FI),
                             MFI.getObjectAlignment(FI));
@@ -134,7 +135,7 @@ loadRegFromStackSlot(MachineBasicBlock &MBB,
   MachineFrameInfo &MFI = *MF.getFrameInfo();
 
   MachineMemOperand *MMO =
-    MF.getMachineMemOperand(MachinePointerInfo::getFixedStack(FI),
+    MF.getMachineMemOperand(MachinePointerInfo::getFixedStack(MF, FI),
                             MachineMemOperand::MOLoad,
                             MFI.getObjectSize(FI),
                             MFI.getObjectAlignment(FI));

@@ -32,5 +32,15 @@ has_disassembler = 1
 type = Library
 name = SampleCodeGen
 parent = Sample
-required_libraries = AsmPrinter CodeGen Core MC SampleAsmPrinter SampleDesc SampleInfo SelectionDAG Support Target
+required_libraries =
+ AsmPrinter
+ CodeGen
+ Core
+ MC
+ SampleAsmPrinter
+ SampleDesc
+ SampleInfo
+ SelectionDAG
+ Support
+ Target
 add_to_library_groups = Sample

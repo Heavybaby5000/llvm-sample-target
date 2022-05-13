@@ -14,6 +14,7 @@
 #define DEBUG_TYPE "sample-reg-info"
 
 #include "SampleRegisterInfo.h"
+#include "SampleSubtarget.h"
 #include "Sample.h"
 #include "llvm/IR/Constants.h"
 #include "llvm/IR/Type.h"

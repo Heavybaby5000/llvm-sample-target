@@ -155,7 +155,7 @@ static DecodeStatus DecodeCPURegsRegisterClass(MCInst &Inst,
   if (RegNo > 31)
     return MCDisassembler::Fail;
 
-  Inst.addOperand(MCOperand::CreateReg(CPURegsTable[RegNo]));
+  Inst.addOperand(MCOperand::createReg(CPURegsTable[RegNo]));
   return MCDisassembler::Success;
 }
 
@@ -167,9 +167,9 @@ static DecodeStatus DecodeMem(MCInst &Inst,
   int Reg = (int)fieldFromInstruction(Insn, 16, 4);
   int Base = (int)fieldFromInstruction(Insn, 20, 4);
 
-  Inst.addOperand(MCOperand::CreateReg(CPURegsTable[Reg]));
-  Inst.addOperand(MCOperand::CreateReg(CPURegsTable[Base]));
-  Inst.addOperand(MCOperand::CreateImm(Offset));
+  Inst.addOperand(MCOperand::createReg(CPURegsTable[Reg]));
+  Inst.addOperand(MCOperand::createReg(CPURegsTable[Base]));
+  Inst.addOperand(MCOperand::createImm(Offset));
 
   return MCDisassembler::Success;
 }
@@ -181,8 +181,8 @@ static DecodeStatus DecodeMoveTarget(MCInst &Inst,
   int Offset = SignExtend32<20>(Insn & 0xfffff);
   int Reg = (int)fieldFromInstruction(Insn, 20, 4);
 
-  Inst.addOperand(MCOperand::CreateReg(CPURegsTable[Reg]));
-  Inst.addOperand(MCOperand::CreateImm(Offset));
+  Inst.addOperand(MCOperand::createReg(CPURegsTable[Reg]));
+  Inst.addOperand(MCOperand::createImm(Offset));
 
   return MCDisassembler::Success;
 }
@@ -193,6 +193,6 @@ static DecodeStatus DecodeCallTarget(MCInst &Inst,
                                      const void *Decoder) {
 
   unsigned CallOffset = fieldFromInstruction(Insn, 0, 24) << 2;
-  Inst.addOperand(MCOperand::CreateImm(CallOffset));
+  Inst.addOperand(MCOperand::createImm(CallOffset));
   return MCDisassembler::Success;
 }

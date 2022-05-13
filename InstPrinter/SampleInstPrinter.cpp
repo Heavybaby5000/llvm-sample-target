@@ -30,7 +30,8 @@ printRegName(raw_ostream &OS, unsigned RegNo) const {
 }
 
 void SampleInstPrinter::
-printInst(const MCInst *MI, raw_ostream &O, StringRef Annot) {
+printInst(const MCInst *MI, raw_ostream &O, StringRef Annot,
+          const MCSubtargetInfo &STI) {
   DEBUG(dbgs() << ">>> printInst:"; MI->dump());
   printInstruction(MI, O);
   printAnnotation(O, Annot);

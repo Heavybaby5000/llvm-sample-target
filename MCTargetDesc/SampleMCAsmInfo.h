@@ -17,12 +17,12 @@
 #include "llvm/MC/MCAsmInfo.h"
 
 namespace llvm {
-  class StringRef;
+  class Triple;
 
   class SampleMCAsmInfo : public MCAsmInfo {
     virtual void anchor() {};
   public:
-    explicit SampleMCAsmInfo(StringRef TT);
+    explicit SampleMCAsmInfo(const Triple &TT);
   };
 
 } // namespace llvm

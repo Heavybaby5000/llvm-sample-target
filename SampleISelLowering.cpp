@@ -89,7 +89,7 @@ SampleTargetLowering(const SampleTargetMachine &TM)
   setStackPointerRegisterToSaveRestore(Sample::SP);
 
   // レジスタの操作方法を計算
-  computeRegisterProperties();
+  computeRegisterProperties(Subtarget.getRegisterInfo());
 }
 
 SDValue SampleTargetLowering::
@@ -159,7 +159,7 @@ LowerFormalArguments(SDValue Chain, CallingConv::ID CallConv,
       // スタックから引数を取得するためにloadノードを作成する
       SDValue FIN = DAG.getFrameIndex(FI, MVT::i32);
       InVals.push_back(DAG.getLoad(VA.getLocVT(), dl, Chain, FIN,
-                                   MachinePointerInfo::getFixedStack(FI),
+                                   MachinePointerInfo::getFixedStack(DAG.getMachineFunction(), FI),
                                    false, false, false, 0));
     }
   }
@@ -214,8 +214,9 @@ LowerCall(CallLoweringInfo &CLI,
   DEBUG(dbgs() << "  stack offset: " << NumBytes << "\n");
 
   // 関数呼び出し開始のNode
+  auto PtrVT = getPointerTy(DAG.getDataLayout());
   InChain = DAG.getCALLSEQ_START(InChain ,
-                                 DAG.getConstant(NumBytes, getPointerTy(), true), dl);
+                                 DAG.getConstant(NumBytes, dl, PtrVT, true), dl);
 
   SmallVector<std::pair<unsigned, SDValue>, 4> RegsToPass;
   SDValue StackPtr;
@@ -295,8 +296,8 @@ LowerCall(CallLoweringInfo &CLI,
 
   // 関数呼び出し終了のNode
   InChain = DAG.getCALLSEQ_END(InChain,
-                               DAG.getConstant(NumBytes, getPointerTy(), true),
-                               DAG.getConstant(0, getPointerTy(), true),
+                               DAG.getConstant(NumBytes, dl, PtrVT, true),
+                               DAG.getConstant(0, dl, PtrVT, true),
                                InFlag, dl);
   InFlag = InChain.getValue(1);
 

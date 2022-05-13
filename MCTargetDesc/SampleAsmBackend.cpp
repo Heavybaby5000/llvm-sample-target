@@ -53,7 +53,7 @@ public:
   SampleAsmBackend(const Target &T,  Triple::OSType _OSType)
     :MCAsmBackend(), OSType(_OSType) {}
 
-  MCObjectWriter *createObjectWriter(raw_ostream &OS) const {
+  MCObjectWriter *createObjectWriter(raw_pwrite_stream &OS) const {
     return createSampleELFObjectWriter(OS, OSType);
   }
 
@@ -173,6 +173,6 @@ getFixupKindInfo(MCFixupKind Kind) const {
 
 // MCAsmBackend
 MCAsmBackend *llvm::createSampleAsmBackend(const Target &T, const MCRegisterInfo &MRI,
-                                           StringRef TT, StringRef CPU) {
-  return new SampleAsmBackend(T, Triple(TT).getOS());
+                                           const Triple &TT, StringRef CPU) {
+  return new SampleAsmBackend(T, TT.getOS());
 }

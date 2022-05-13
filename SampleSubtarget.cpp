@@ -24,19 +24,14 @@
 
 using namespace llvm;
 
-static std::string computeDataLayout() {
-  return "e-p:32:32:32-i8:8:32-i16:16:32-i64:64:64-n32";
-}
-
-SampleSubtarget::SampleSubtarget(const std::string &TT,
+SampleSubtarget::SampleSubtarget(const Triple &TT,
                                  const std::string &CPU,
                                  const std::string &FS,
                                  const SampleTargetMachine &TM)
     : SampleGenSubtargetInfo(TT, CPU, FS),
-      DL(computeDataLayout()),
       InstrInfo(*this),
       FrameLowering(*this),
-      TLInfo(TM), TSInfo(&DL) {
+      TLInfo(TM), TSInfo() {
   std::string CPUName = "generic";
 
   // Parse features string.

@@ -48,22 +48,22 @@ namespace {
 
 class SampleDAGToDAGISel : public SelectionDAGISel {
 
-  /// TM - Keep a reference to SampleTargetMachine.
-  const SampleTargetMachine &TM;
-
   /// Subtarget - Keep a pointer to the SampleSubtarget around so that we can
   /// make the right decision when generating code for different targets.
-  const SampleSubtarget &Subtarget;
+  const SampleSubtarget *Subtarget;
 
 public:
   explicit SampleDAGToDAGISel(SampleTargetMachine &tm) :
-  SelectionDAGISel(tm),
-  TM(tm),
-  Subtarget(tm.getSubtarget<SampleSubtarget>()) {}
+      SelectionDAGISel(tm), Subtarget(nullptr) {}
 
   // Pass Name
   virtual const char *getPassName() const {
     return "Sample DAG->DAG Pattern Instruction Selection";
+  }
+
+  bool runOnMachineFunction(MachineFunction &MF) override {
+    Subtarget = &MF.getSubtarget<SampleSubtarget>();
+    return SelectionDAGISel::runOnMachineFunction(MF);
   }
 
 private:
@@ -81,11 +81,12 @@ private:
 /// Used on Sample Load/Store instructions
 bool SampleDAGToDAGISel::
 SelectAddr(SDValue N, SDValue &Base, SDValue &Offset) {
+  SDLoc DL(N);
   EVT ValTy = N.getValueType();
 
   if (FrameIndexSDNode *FIN = dyn_cast<FrameIndexSDNode>(N)) {
     Base   = CurDAG->getTargetFrameIndex(FIN->getIndex(), ValTy);
-    Offset = CurDAG->getTargetConstant(0, ValTy);
+    Offset = CurDAG->getTargetConstant(0, DL, ValTy);
     return true;
   }
 

@@ -28,13 +28,16 @@ class SampleTargetMachine : public LLVMTargetMachine {
   SampleSubtarget Subtarget;
 
  public:
-  SampleTargetMachine(const Target &T, StringRef TT,
+  SampleTargetMachine(const Target &T, const Triple &TT,
                       StringRef CPU, StringRef FS, const TargetOptions &Options,
                       Reloc::Model RM, CodeModel::Model CM,
                       CodeGenOpt::Level OL);
 
-  virtual const SampleSubtarget *getSubtargetImpl() const {
+  const SampleSubtarget *getSubtargetImpl() const {
     return &Subtarget;
+  }
+  const SampleSubtarget *getSubtargetImpl(const Function &F) const override {
+    return getSubtargetImpl();
   }
 
   // Pass Pipeline Configuration

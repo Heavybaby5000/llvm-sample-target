@@ -32,19 +32,17 @@ class SampleMCCodeEmitter : public MCCodeEmitter {
   SampleMCCodeEmitter(const SampleMCCodeEmitter &); // DO NOT IMPLEMENT
   void operator=(const SampleMCCodeEmitter &); // DO NOT IMPLEMENT
   const MCInstrInfo &MCII;
-  const MCSubtargetInfo &STI;
   MCContext &Ctx;
 
  public:
-  SampleMCCodeEmitter(const MCInstrInfo &mcii, const MCSubtargetInfo &sti,
-                    MCContext &ctx) :
-            MCII(mcii), STI(sti) , Ctx(ctx) {}
+  SampleMCCodeEmitter(const MCInstrInfo &mcii, MCContext &ctx) :
+            MCII(mcii), Ctx(ctx) {}
 
   ~SampleMCCodeEmitter() {}
 
   // EncodeInstruction - AsmStreamerから実行される
   // 命令をバイナリにして出力する
-  void EncodeInstruction(const MCInst &MI, raw_ostream &OS,
+  void encodeInstruction(const MCInst &MI, raw_ostream &OS,
                          SmallVectorImpl<MCFixup> &Fixups,
                          const MCSubtargetInfo &STI) const;
 
@@ -84,15 +82,14 @@ class SampleMCCodeEmitter : public MCCodeEmitter {
 
 MCCodeEmitter *llvm::createSampleMCCodeEmitter(const MCInstrInfo &MCII,
                                                const MCRegisterInfo &MRI,
-                                               const MCSubtargetInfo &STI,
                                                MCContext &Ctx)
 {
-  return new SampleMCCodeEmitter(MCII, STI, Ctx);
+  return new SampleMCCodeEmitter(MCII, Ctx);
 }
 
 /// EncodeInstruction - Emit the instruction.
 void SampleMCCodeEmitter::
-EncodeInstruction(const MCInst &MI, raw_ostream &OS,
+encodeInstruction(const MCInst &MI, raw_ostream &OS,
                   SmallVectorImpl<MCFixup> &Fixups,
                   const MCSubtargetInfo &STI) const
 {
@@ -169,7 +166,7 @@ getCallTargetOpValue(const MCInst &MI, unsigned OpNo,
   assert(MO.isExpr() && "getCallTargetOpValue expects only expressions");
 
   const MCExpr *Expr = MO.getExpr();
-  Fixups.push_back(MCFixup::Create(0, Expr,
+  Fixups.push_back(MCFixup::create(0, Expr,
                                    MCFixupKind(Sample::fixup_Sample_24)));
   return 0;
 }

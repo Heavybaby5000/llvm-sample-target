@@ -69,14 +69,14 @@ LowerSymbolOperand(const MachineOperand &MO,
     llvm_unreachable("<unknown operand type>");
   }
 
-  const MCExpr *Expr = MCSymbolRefExpr::Create(Symbol, Ctx);
+  const MCExpr *Expr = MCSymbolRefExpr::create(Symbol, Ctx);
 
   if (Offset) {
-    const MCConstantExpr *OffsetExpr =  MCConstantExpr::Create(Offset, Ctx);
-    Expr = MCBinaryExpr::CreateAdd(Expr, OffsetExpr, Ctx);
+    const MCConstantExpr *OffsetExpr =  MCConstantExpr::create(Offset, Ctx);
+    Expr = MCBinaryExpr::createAdd(Expr, OffsetExpr, Ctx);
   }
 
-  return MCOperand::CreateExpr(Expr);
+  return MCOperand::createExpr(Expr);
 }
 
 MCOperand SampleMCInstLower::
@@ -90,9 +90,9 @@ LowerOperand(const MachineOperand& MO) const {
   case MachineOperand::MO_Register:
     // Ignore all implicit register operands.
     if (MO.isImplicit()) break;
-    return MCOperand::CreateReg(MO.getReg());
+    return MCOperand::createReg(MO.getReg());
   case MachineOperand::MO_Immediate:
-    return MCOperand::CreateImm(MO.getImm());
+    return MCOperand::createImm(MO.getImm());
   case MachineOperand::MO_MachineBasicBlock:
   case MachineOperand::MO_GlobalAddress:
   case MachineOperand::MO_ExternalSymbol:

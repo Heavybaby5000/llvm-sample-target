@@ -27,19 +27,20 @@ class MCRegisterInfo;
 class MCSubtargetInfo;
 class StringRef;
 class Target;
+class Triple;
 class raw_ostream;
+class raw_pwrite_stream;
 
 extern Target TheSampleTarget;
 
 MCCodeEmitter *createSampleMCCodeEmitter(const MCInstrInfo &MCII,
                                          const MCRegisterInfo &MRI,
-                                         const MCSubtargetInfo &STI,
                                          MCContext &Ctx);
 
 MCAsmBackend *createSampleAsmBackend(const Target &T, const MCRegisterInfo &MRI,
-                                     StringRef TT, StringRef CPU);
+                                     const Triple &TT, StringRef CPU);
 
-MCObjectWriter *createSampleELFObjectWriter(raw_ostream &OS,
+MCObjectWriter *createSampleELFObjectWriter(raw_pwrite_stream &OS,
                                             uint8_t OSABI);
 } // End llvm namespace
 

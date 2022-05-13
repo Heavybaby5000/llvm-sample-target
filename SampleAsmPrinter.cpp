@@ -37,8 +37,8 @@ using namespace llvm;
 namespace {
 class SampleAsmPrinter : public AsmPrinter {
  public:
-  SampleAsmPrinter(TargetMachine &TM, MCStreamer &Streamer)
-      : AsmPrinter(TM, Streamer) {}
+  SampleAsmPrinter(TargetMachine &TM, std::unique_ptr<MCStreamer> Streamer)
+      : AsmPrinter(TM, std::move(Streamer)) {}
 
   virtual const char *getPassName() const {
     return "Sample Assembly Printer";
@@ -56,7 +56,7 @@ EmitInstruction(const MachineInstr *MI) {
   SampleMCInstLower MCInstLowering(OutContext, *Mang, *this);
   MCInst TmpInst;
   MCInstLowering.Lower(MI, TmpInst);
-  EmitToStreamer(OutStreamer, TmpInst);
+  EmitToStreamer(*OutStreamer, TmpInst);
 }
 
 // Force static initialization.

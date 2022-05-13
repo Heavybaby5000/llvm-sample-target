@@ -38,15 +38,14 @@ hasFP(const MachineFunction &MF) const {
 void SampleFrameLowering::
 eliminateCallFramePseudoInstr(MachineFunction &MF, MachineBasicBlock &MBB,
                               MachineBasicBlock::iterator I) const {
-  DEBUG(dbgs() << ">> SampleRegisterInfo::eliminateCallFramePseudoInstr <<\n";);
+  DEBUG(dbgs() << ">> SampleFrameLowering::eliminateCallFramePseudoInstr <<\n";);
   MBB.erase(I);
 }
 
 void SampleFrameLowering::
-emitPrologue(MachineFunction &MF) const {
+emitPrologue(MachineFunction &MF, MachineBasicBlock &MBB) const {
   DEBUG(dbgs() << ">> SampleFrameLowering::emitPrologue <<\n");
 
-  MachineBasicBlock &MBB   = MF.front();
   MachineFrameInfo *MFI = MF.getFrameInfo();
 
   const SampleInstrInfo &TII =
@@ -87,4 +86,13 @@ emitEpilogue(MachineFunction &MF, MachineBasicBlock &MBB) const {
   BuildMI(MBB, MBBI, dl, TII.get(Sample::ADD), Sample::SP)
       .addReg(Sample::SP)
       .addReg(Sample::T0);
+}
+
+void SampleFrameLowering::determineCalleeSaves(MachineFunction &MF,
+                                               BitVector &SavedRegs,
+                                               RegScavenger *RS) const {
+  TargetFrameLowering::determineCalleeSaves(MF, SavedRegs, RS);
+
+  // RAレジスタの書き変えはハードウェアで行うため手動で追加
+  SavedRegs.set(Sample::RA);
 }

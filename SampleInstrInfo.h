@@ -23,7 +23,7 @@
 #include "SampleGenInstrInfo.inc"
 
 namespace llvm {
-
+class SampleSubtarget;
 namespace Sample {
   /// GetOppositeBranchOpc - Return the inverse of the specified
   /// opcode, e.g. turning BEQ to BNE.

@@ -59,7 +59,7 @@ GetRelocType(const MCValue &Target,
   return Type;
 }
 
-MCObjectWriter *llvm::createSampleELFObjectWriter(raw_ostream &OS,
+MCObjectWriter *llvm::createSampleELFObjectWriter(raw_pwrite_stream &OS,
                                                   uint8_t OSABI) {
   MCELFObjectTargetWriter *MOTW = new SampleELFObjectWriter(OSABI);
   return createELFObjectWriter(MOTW, OS, /*isLittleEndian*/ true);

@@ -15,7 +15,7 @@
 #include "llvm/ADT/StringRef.h"
 using namespace llvm;
 
-SampleMCAsmInfo::SampleMCAsmInfo(StringRef TT) {
+SampleMCAsmInfo::SampleMCAsmInfo(const Triple &TT) {
   PointerSize = 4;
 
   PrivateGlobalPrefix = ".L";

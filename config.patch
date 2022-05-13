@@ -1,8 +1,8 @@
 diff --git a/llvm/CMakeLists.txt b/llvm/CMakeLists.txt
-index cfa32cf4bc5a..5a92a9d1839e 100644
+index 4dd43e7c5087..d3639c96f65b 100644
 --- a/llvm/CMakeLists.txt
 +++ b/llvm/CMakeLists.txt
-@@ -168,6 +168,7 @@ set(LLVM_ALL_TARGETS
+@@ -216,6 +216,7 @@ set(LLVM_ALL_TARGETS
    SystemZ
    X86
    XCore
@@ -11,26 +11,26 @@ index cfa32cf4bc5a..5a92a9d1839e 100644
  
  # List of targets with JIT support:
 diff --git a/llvm/include/llvm/ADT/Triple.h b/llvm/include/llvm/ADT/Triple.h
-index 8a685995256b..d56714cd8122 100644
+index e01db0a61fd5..e5eabd58864e 100644
 --- a/llvm/include/llvm/ADT/Triple.h
 +++ b/llvm/include/llvm/ADT/Triple.h
-@@ -80,7 +80,8 @@ public:
-     hsail64,    // AMD HSAIL with 64-bit pointers
-     spir,       // SPIR: standard portable IR for OpenCL 32-bit version
-     spir64,     // SPIR: standard portable IR for OpenCL 64-bit version
--    kalimba     // Kalimba: generic kalimba
-+    kalimba,    // Kalimba: generic kalimba
-+    sample      // Sample: sample
+@@ -88,7 +88,8 @@ public:
+     shave,      // SHAVE: Movidius vector VLIW processors
+     wasm32,     // WebAssembly with 32-bit pointers
+     wasm64,     // WebAssembly with 64-bit pointers
+-    LastArchType = wasm64
++    sample,     // Sample: sample
++    LastArchType = sample
    };
    enum SubArchType {
      NoSubArch,
 diff --git a/llvm/include/llvm/IR/ValueMap.h b/llvm/include/llvm/IR/ValueMap.h
-index f2ea405f1428..a1ab2a500f40 100644
+index ad518ac053b2..b9f9744d7cba 100644
 --- a/llvm/include/llvm/IR/ValueMap.h
 +++ b/llvm/include/llvm/IR/ValueMap.h
-@@ -101,7 +101,7 @@ public:
- 
-   ~ValueMap() {}
+@@ -99,7 +99,7 @@ public:
+   explicit ValueMap(const ExtraData &Data, unsigned NumInitBuckets = 64)
+       : Map(NumInitBuckets), Data(Data) {}
  
 -  bool hasMD() const { return MDMap; }
 +  bool hasMD() const { return bool(MDMap); }
@@ -38,67 +38,90 @@ index f2ea405f1428..a1ab2a500f40 100644
      if (!MDMap)
        MDMap.reset(new MDMapT);
 diff --git a/llvm/lib/Support/Triple.cpp b/llvm/lib/Support/Triple.cpp
-index 0838e90baaec..59e6df5abfca 100644
+index 11afcf7f0adc..babb075de0d0 100644
 --- a/llvm/lib/Support/Triple.cpp
 +++ b/llvm/lib/Support/Triple.cpp
-@@ -54,6 +54,7 @@ const char *Triple::getArchTypeName(ArchType Kind) {
-   case spir:        return "spir";
-   case spir64:      return "spir64";
-   case kalimba:     return "kalimba";
+@@ -63,6 +63,7 @@ const char *Triple::getArchTypeName(ArchType Kind) {
+   case shave:       return "shave";
+   case wasm32:      return "wasm32";
+   case wasm64:      return "wasm64";
 +  case sample:      return "sample";
    }
  
    llvm_unreachable("Invalid ArchType!");
-@@ -223,6 +224,7 @@ Triple::ArchType Triple::getArchTypeForLLVMName(StringRef Name) {
-     .Case("spir", spir)
-     .Case("spir64", spir64)
-     .Case("kalimba", kalimba)
+@@ -271,6 +272,7 @@ Triple::ArchType Triple::getArchTypeForLLVMName(StringRef Name) {
+     .Case("shave", shave)
+     .Case("wasm32", wasm32)
+     .Case("wasm64", wasm64)
 +    .Case("sample", sample)
      .Default(UnknownArch);
  }
  
-@@ -318,6 +320,7 @@ static Triple::ArchType parseArch(StringRef ArchName) {
-     .Case("spir", Triple::spir)
-     .Case("spir64", Triple::spir64)
-     .StartsWith("kalimba", Triple::kalimba)
+@@ -379,6 +381,7 @@ static Triple::ArchType parseArch(StringRef ArchName) {
+     .Case("shave", Triple::shave)
+     .Case("wasm32", Triple::wasm32)
+     .Case("wasm64", Triple::wasm64)
 +    .Case("sample", Triple::sample)
      .Default(Triple::UnknownArch);
- }
  
-@@ -878,6 +881,7 @@ static unsigned getArchPointerBitWidth(llvm::Triple::ArchType Arch) {
-   case llvm::Triple::hsail:
-   case llvm::Triple::spir:
+   // Some architectures require special parsing logic just to compute the
+@@ -585,6 +588,7 @@ static Triple::ObjectFormatType getDefaultFormat(const Triple &T) {
+   case Triple::wasm32:
+   case Triple::wasm64:
+   case Triple::xcore:
++  case Triple::sample:
+     return Triple::ELF;
+ 
+   case Triple::ppc:
+@@ -1113,6 +1117,7 @@ static unsigned getArchPointerBitWidth(llvm::Triple::ArchType Arch) {
    case llvm::Triple::kalimba:
+   case llvm::Triple::shave:
+   case llvm::Triple::wasm32:
 +  case llvm::Triple::sample:
      return 32;
  
    case llvm::Triple::aarch64:
-@@ -944,6 +948,7 @@ Triple Triple::get32BitArchVariant() const {
-   case Triple::thumbeb:
-   case Triple::x86:
+@@ -1186,6 +1191,7 @@ Triple Triple::get32BitArchVariant() const {
    case Triple::xcore:
+   case Triple::shave:
+   case Triple::wasm32:
 +  case Triple::sample:
      // Already 32-bit.
      break;
  
-@@ -975,6 +980,7 @@ Triple Triple::get64BitArchVariant() const {
-   case Triple::thumb:
-   case Triple::thumbeb:
+@@ -1219,6 +1225,7 @@ Triple Triple::get64BitArchVariant() const {
    case Triple::xcore:
+   case Triple::sparcel:
+   case Triple::shave:
 +  case Triple::sample:
      T.setArch(UnknownArch);
      break;
  
+@@ -1288,6 +1295,7 @@ Triple Triple::getBigEndianArchVariant() const {
+   case Triple::x86:
+   case Triple::x86_64:
+   case Triple::xcore:
++  case Triple::sample:
+ 
+   // ARM is intentionally unsupported here, changing the architecture would
+   // drop any arch suffixes.
+@@ -1367,6 +1375,7 @@ Triple Triple::getLittleEndianArchVariant() const {
+   case Triple::x86:
+   case Triple::x86_64:
+   case Triple::xcore:
++  case Triple::sample:
+     // Already little endian.
+     break;
+ 
 diff --git a/llvm/lib/Target/LLVMBuild.txt b/llvm/lib/Target/LLVMBuild.txt
-index 1b0837cb3b54..509dbdb3ae19 100644
+index eb794ebc7216..f59179be3a4c 100644
 --- a/llvm/lib/Target/LLVMBuild.txt
 +++ b/llvm/lib/Target/LLVMBuild.txt
-@@ -16,7 +16,7 @@
- ;===------------------------------------------------------------------------===;
- 
- [common]
--subdirectories = ARM AArch64 CppBackend Hexagon MSP430 NVPTX Mips PowerPC R600 Sparc SystemZ X86 XCore
-+subdirectories = ARM AArch64 CppBackend Hexagon MSP430 NVPTX Mips PowerPC R600 Sparc SystemZ X86 XCore Sample
+@@ -35,6 +35,7 @@ subdirectories =
+  WebAssembly
+  X86
+  XCore
++ Sample
  
  ; This is a special group whose required libraries are extended (by llvm-build)
  ; with the best execution engine (the native JIT, if available, or the

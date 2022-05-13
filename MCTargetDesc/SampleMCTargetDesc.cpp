@@ -40,20 +40,18 @@ static MCInstrInfo *createSampleMCInstrInfo() {
   return X;
 }
 
-static MCRegisterInfo *createSampleMCRegisterInfo(StringRef TT) {
+static MCRegisterInfo *createSampleMCRegisterInfo(const Triple &TT) {
   MCRegisterInfo *X = new MCRegisterInfo();
   InitSampleMCRegisterInfo(X, Sample::RA);
   return X;
 }
 
-static MCSubtargetInfo *createSampleMCSubtargetInfo(StringRef TT, StringRef CPU,
-                                                  StringRef FS) {
-  MCSubtargetInfo *X = new MCSubtargetInfo();
-  InitSampleMCSubtargetInfo(X, TT, CPU, FS);
-  return X;
+static MCSubtargetInfo *createSampleMCSubtargetInfo(const Triple &TT, StringRef CPU,
+                                                    StringRef FS) {
+  return createSampleMCSubtargetInfoImpl(TT, CPU, FS);
 }
 
-static MCAsmInfo *createSampleMCAsmInfo(const MCRegisterInfo &MRI, StringRef TT) {
+static MCAsmInfo *createSampleMCAsmInfo(const MCRegisterInfo &MRI, const Triple &TT) {
   MCAsmInfo *MAI = new SampleMCAsmInfo(TT);
 
   MCCFIInstruction Inst = MCCFIInstruction::createDefCfa(0, Sample::SP, 0);
@@ -62,31 +60,27 @@ static MCAsmInfo *createSampleMCAsmInfo(const MCRegisterInfo &MRI, StringRef TT)
   return MAI;
 }
 
-static MCCodeGenInfo *createSampleMCCodeGenInfo(StringRef TT, Reloc::Model RM,
+static MCCodeGenInfo *createSampleMCCodeGenInfo(const Triple &TT, Reloc::Model RM,
                                               CodeModel::Model CM,
                                               CodeGenOpt::Level OL) {
   MCCodeGenInfo *X = new MCCodeGenInfo();
-  X->InitMCCodeGenInfo(RM, CM, OL);
+  X->initMCCodeGenInfo(RM, CM, OL);
   return X;
 }
 
-static MCInstPrinter *createSampleMCInstPrinter(const Target &T,
+static MCInstPrinter *createSampleMCInstPrinter(const Triple &T,
                                               unsigned SyntaxVariant,
                                               const MCAsmInfo &MAI,
                                               const MCInstrInfo &MII,
-                                              const MCRegisterInfo &MRI,
-                                              const MCSubtargetInfo &STI) {
+                                              const MCRegisterInfo &MRI) {
   return new SampleInstPrinter(MAI, MII, MRI);
 }
 
-static MCStreamer *createMCStreamer(const Target &T, StringRef TT,
+static MCStreamer *createMCStreamer(const Triple &T,
                                     MCContext &Ctx, MCAsmBackend &MAB,
-                                    raw_ostream &_OS,
+                                    raw_pwrite_stream &_OS,
                                     MCCodeEmitter *_Emitter,
-                                    const MCSubtargetInfo &STI,
                                     bool RelaxAll) {
-  Triple TheTriple(TT);
-
   return createELFStreamer(Ctx, MAB, _OS, _Emitter, RelaxAll);
 }
 
@@ -104,7 +98,7 @@ extern "C" void LLVMInitializeSampleTargetMC() {
   TargetRegistry::RegisterMCCodeEmitter(TheSampleTarget,
                                         createSampleMCCodeEmitter);
   // Register the object streamer.
-  TargetRegistry::RegisterMCObjectStreamer(TheSampleTarget, createMCStreamer);
+  TargetRegistry::RegisterELFStreamer(TheSampleTarget, createMCStreamer);
   // Register the asm backend.
   TargetRegistry::RegisterMCAsmBackend(TheSampleTarget,
                                        createSampleAsmBackend);
