@@ -108,13 +108,13 @@ SDValue SampleTargetLowering::
 LowerFormalArguments(SDValue Chain, CallingConv::ID CallConv,
                      bool isVarArg,
                      const SmallVectorImpl<ISD::InputArg> &Ins,
-                     SDLoc dl, SelectionDAG &DAG,
+                     const SDLoc &dl, SelectionDAG &DAG,
                      SmallVectorImpl<SDValue> &InVals) const {
   DEBUG(dbgs() << ">> SampleTargetLowering::LowerFormalArguments <<\n");
   DEBUG(dbgs() << "  Chain: ";  Chain->dumpr(););
 
   MachineFunction &MF = DAG.getMachineFunction();
-  MachineFrameInfo *MFI = MF.getFrameInfo();
+  MachineFrameInfo &MFI = MF.getFrameInfo();
   MachineRegisterInfo &RegInfo = MF.getRegInfo();
 
   // Assign locations to all of the incoming arguments.
@@ -154,13 +154,12 @@ LowerFormalArguments(SDValue Chain, CallingConv::ID CallConv,
             << "\n";);
 
       // フレームインデックスを作成する
-      int FI = MFI->CreateFixedObject(ObjSize, VA.getLocMemOffset(), true);
+      int FI = MFI.CreateFixedObject(ObjSize, VA.getLocMemOffset(), true);
 
       // スタックから引数を取得するためにloadノードを作成する
       SDValue FIN = DAG.getFrameIndex(FI, MVT::i32);
       InVals.push_back(DAG.getLoad(VA.getLocVT(), dl, Chain, FIN,
-                                   MachinePointerInfo::getFixedStack(DAG.getMachineFunction(), FI),
-                                   false, false, false, 0));
+                                   MachinePointerInfo::getFixedStack(DAG.getMachineFunction(), FI)));
     }
   }
 
@@ -312,7 +311,7 @@ SDValue SampleTargetLowering::
 LowerCallResult(SDValue Chain, SDValue InFlag,
                 CallingConv::ID CallConv, bool isVarArg,
                 const SmallVectorImpl<ISD::InputArg> &Ins,
-                SDLoc dl, SelectionDAG &DAG,
+                const SDLoc &dl, SelectionDAG &DAG,
                 SmallVectorImpl<SDValue> &InVals) const {
   // Assign locations to each value returned by this call.
   SmallVector<CCValAssign, 16> RVLocs;
@@ -341,7 +340,7 @@ LowerReturn(SDValue Chain,
             CallingConv::ID CallConv, bool isVarArg,
             const SmallVectorImpl<ISD::OutputArg> &Outs,
             const SmallVectorImpl<SDValue> &OutVals,
-            SDLoc dl, SelectionDAG &DAG) const {
+            const SDLoc &dl, SelectionDAG &DAG) const {
   DEBUG(dbgs() << ">> SampleTargetLowering::LowerReturn <<\n");
   DEBUG(dbgs() << " Chain: "; Chain->dumpr(););
 

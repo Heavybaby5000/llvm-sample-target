@@ -25,20 +25,22 @@ class MCInstrInfo;
 class MCObjectWriter;
 class MCRegisterInfo;
 class MCSubtargetInfo;
+class MCTargetOptions;
 class StringRef;
 class Target;
 class Triple;
 class raw_ostream;
 class raw_pwrite_stream;
 
-extern Target TheSampleTarget;
+Target &getTheSampleTarget();
 
 MCCodeEmitter *createSampleMCCodeEmitter(const MCInstrInfo &MCII,
                                          const MCRegisterInfo &MRI,
                                          MCContext &Ctx);
 
 MCAsmBackend *createSampleAsmBackend(const Target &T, const MCRegisterInfo &MRI,
-                                     const Triple &TT, StringRef CPU);
+                                     const Triple &TT, StringRef CPU,
+                                     const MCTargetOptions &Options);
 
 MCObjectWriter *createSampleELFObjectWriter(raw_pwrite_stream &OS,
                                             uint8_t OSABI);

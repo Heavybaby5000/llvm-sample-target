@@ -13,7 +13,7 @@
 
 #include "Sample.h"
 #include "SampleSubtarget.h"
-#include "llvm/MC/MCDisassembler.h"
+#include "llvm/MC/MCDisassembler/MCDisassembler.h"
 #include "llvm/MC/MCFixedLenDisassembler.h"
 #include "llvm/Support/TargetRegistry.h"
 #include "llvm/MC/MCSubtargetInfo.h"
@@ -43,7 +43,7 @@ public:
                               ArrayRef<uint8_t> Bytes,
                               uint64_t address,
                               raw_ostream &vStream,
-                              raw_ostream &cStream) const;
+                              raw_ostream &cStream) const override;
 
 private:
   DecodeStatus readInstruction32(ArrayRef<uint8_t> Bytes,
@@ -95,7 +95,7 @@ static MCDisassembler *createSampleDisassembler(
 
 extern "C" void LLVMInitializeSampleDisassembler() {
   // Register the disassembler.
-  TargetRegistry::RegisterMCDisassembler(TheSampleTarget,
+  TargetRegistry::RegisterMCDisassembler(getTheSampleTarget(),
                                          createSampleDisassembler);
 }
 

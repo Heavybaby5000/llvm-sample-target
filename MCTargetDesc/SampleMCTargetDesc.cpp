@@ -15,7 +15,6 @@
 #include "SampleMCTargetDesc.h"
 #include "InstPrinter/SampleInstPrinter.h"
 #include "llvm/MC/MachineLocation.h"
-#include "llvm/MC/MCCodeGenInfo.h"
 #include "llvm/MC/MCInstrInfo.h"
 #include "llvm/MC/MCRegisterInfo.h"
 #include "llvm/MC/MCStreamer.h"
@@ -60,14 +59,6 @@ static MCAsmInfo *createSampleMCAsmInfo(const MCRegisterInfo &MRI, const Triple 
   return MAI;
 }
 
-static MCCodeGenInfo *createSampleMCCodeGenInfo(const Triple &TT, Reloc::Model RM,
-                                              CodeModel::Model CM,
-                                              CodeGenOpt::Level OL) {
-  MCCodeGenInfo *X = new MCCodeGenInfo();
-  X->initMCCodeGenInfo(RM, CM, OL);
-  return X;
-}
-
 static MCInstPrinter *createSampleMCInstPrinter(const Triple &T,
                                               unsigned SyntaxVariant,
                                               const MCAsmInfo &MAI,
@@ -86,27 +77,24 @@ static MCStreamer *createMCStreamer(const Triple &T,
 
 extern "C" void LLVMInitializeSampleTargetMC() {
   // Register the MC asm info.
-  RegisterMCAsmInfoFn X(TheSampleTarget, createSampleMCAsmInfo);
-  // Register the MC codegen info.
-  TargetRegistry::RegisterMCCodeGenInfo(TheSampleTarget,
-                                        createSampleMCCodeGenInfo);
+  RegisterMCAsmInfoFn X(getTheSampleTarget(), createSampleMCAsmInfo);
   // Register the MC instruction info.
-  TargetRegistry::RegisterMCInstrInfo(TheSampleTarget, createSampleMCInstrInfo);
+  TargetRegistry::RegisterMCInstrInfo(getTheSampleTarget(), createSampleMCInstrInfo);
   // Register the MC register info.
-  TargetRegistry::RegisterMCRegInfo(TheSampleTarget, createSampleMCRegisterInfo);
+  TargetRegistry::RegisterMCRegInfo(getTheSampleTarget(), createSampleMCRegisterInfo);
   // Register the MC Code Emitter
-  TargetRegistry::RegisterMCCodeEmitter(TheSampleTarget,
+  TargetRegistry::RegisterMCCodeEmitter(getTheSampleTarget(),
                                         createSampleMCCodeEmitter);
   // Register the object streamer.
-  TargetRegistry::RegisterELFStreamer(TheSampleTarget, createMCStreamer);
+  TargetRegistry::RegisterELFStreamer(getTheSampleTarget(), createMCStreamer);
   // Register the asm backend.
-  TargetRegistry::RegisterMCAsmBackend(TheSampleTarget,
+  TargetRegistry::RegisterMCAsmBackend(getTheSampleTarget(),
                                        createSampleAsmBackend);
   // Register the MC subtarget info.
-  TargetRegistry::RegisterMCSubtargetInfo(TheSampleTarget,
+  TargetRegistry::RegisterMCSubtargetInfo(getTheSampleTarget(),
                                           createSampleMCSubtargetInfo);
   // Register the MCInstPrinter.
-  TargetRegistry::RegisterMCInstPrinter(TheSampleTarget,
+  TargetRegistry::RegisterMCInstPrinter(getTheSampleTarget(),
                                         createSampleMCInstPrinter);
 }
 

@@ -40,12 +40,12 @@ class SampleAsmPrinter : public AsmPrinter {
   SampleAsmPrinter(TargetMachine &TM, std::unique_ptr<MCStreamer> Streamer)
       : AsmPrinter(TM, std::move(Streamer)) {}
 
-  virtual const char *getPassName() const {
+  StringRef getPassName() const override {
     return "Sample Assembly Printer";
   }
 
   // should overwrite functions
-  void EmitInstruction(const MachineInstr *MI) /*override*/;
+  void EmitInstruction(const MachineInstr *MI) override;
 };
 } // end of anonymous namespace
 
@@ -53,7 +53,7 @@ void SampleAsmPrinter::
 EmitInstruction(const MachineInstr *MI) {
   DEBUG(dbgs() << ">> SampleAsmPinter::EmitInstruction <<\n");
   DEBUG(MI->dump());
-  SampleMCInstLower MCInstLowering(OutContext, *Mang, *this);
+  SampleMCInstLower MCInstLowering(OutContext, *this);
   MCInst TmpInst;
   MCInstLowering.Lower(MI, TmpInst);
   EmitToStreamer(*OutStreamer, TmpInst);
@@ -61,5 +61,5 @@ EmitInstruction(const MachineInstr *MI) {
 
 // Force static initialization.
 extern "C" void LLVMInitializeSampleAsmPrinter() {
-  RegisterAsmPrinter<SampleAsmPrinter> X(TheSampleTarget);
+  RegisterAsmPrinter<SampleAsmPrinter> X(getTheSampleTarget());
 }

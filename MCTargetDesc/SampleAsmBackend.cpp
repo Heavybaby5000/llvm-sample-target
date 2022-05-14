@@ -53,7 +53,7 @@ public:
   SampleAsmBackend(const Target &T,  Triple::OSType _OSType)
     :MCAsmBackend(), OSType(_OSType) {}
 
-  MCObjectWriter *createObjectWriter(raw_pwrite_stream &OS) const {
+  MCObjectWriter *createObjectWriter(raw_pwrite_stream &OS) const override {
     return createSampleELFObjectWriter(OS, OSType);
   }
 
@@ -61,11 +61,11 @@ public:
   /// data fragment, at the offset specified by the fixup and following the
   /// fixup kind as appropriate.
   void applyFixup(const MCFixup &Fixup, char *Data, unsigned DataSize,
-                  uint64_t Value, bool IsPCRel) const;
+                  uint64_t Value, bool IsPCRel) const override;
 
-  unsigned getNumFixupKinds() const { return Sample::NumTargetFixupKinds; }
+  unsigned getNumFixupKinds() const override { return Sample::NumTargetFixupKinds; }
 
-  const MCFixupKindInfo &getFixupKindInfo(MCFixupKind Kind) const;
+  const MCFixupKindInfo &getFixupKindInfo(MCFixupKind Kind) const override;
 
   /// @name Target Relaxation Interfaces
   /// @{
@@ -74,7 +74,7 @@ public:
   /// relaxation.
   ///
   /// \param Inst - The instruction to test.
-  bool mayNeedRelaxation(const MCInst &Inst) const {
+  bool mayNeedRelaxation(const MCInst &Inst) const override {
     return false;
   }
 
@@ -83,7 +83,7 @@ public:
   bool fixupNeedsRelaxation(const MCFixup &Fixup,
                             uint64_t Value,
                             const MCRelaxableFragment *DF,
-                            const MCAsmLayout &Layout) const {
+                            const MCAsmLayout &Layout) const override {
     // FIXME.
     assert(0 && "RelaxInstruction() unimplemented");
     return false;
@@ -95,7 +95,8 @@ public:
   /// \param Inst - The instruction to relax, which may be the same
   /// as the output.
   /// \parm Res [output] - On return, the relaxed instruction.
-  void relaxInstruction(const MCInst &Inst, MCInst &Res) const {
+  void relaxInstruction(const MCInst &Inst, const MCSubtargetInfo &STI,
+                        MCInst &Res) const override {
   }
 
   /// @}
@@ -105,7 +106,7 @@ public:
   /// it should return an error.
   ///
   /// \return - True on success.
-  bool writeNopData(uint64_t Count, MCObjectWriter *OW) const {
+  bool writeNopData(uint64_t Count, MCObjectWriter *OW) const override {
     return true;
   }
 }; // class SampleAsmBackend
@@ -173,6 +174,7 @@ getFixupKindInfo(MCFixupKind Kind) const {
 
 // MCAsmBackend
 MCAsmBackend *llvm::createSampleAsmBackend(const Target &T, const MCRegisterInfo &MRI,
-                                           const Triple &TT, StringRef CPU) {
+                                           const Triple &TT, StringRef CPU,
+                                           const MCTargetOptions &Options) {
   return new SampleAsmBackend(T, TT.getOS());
 }

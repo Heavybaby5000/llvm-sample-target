@@ -44,7 +44,7 @@ class SampleMCCodeEmitter : public MCCodeEmitter {
   // 命令をバイナリにして出力する
   void encodeInstruction(const MCInst &MI, raw_ostream &OS,
                          SmallVectorImpl<MCFixup> &Fixups,
-                         const MCSubtargetInfo &STI) const;
+                         const MCSubtargetInfo &STI) const override;
 
  private:
   // getBinaryCodeForInstr - TableGenが自動生成

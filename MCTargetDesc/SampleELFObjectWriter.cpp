@@ -24,12 +24,12 @@ namespace {
 class SampleELFObjectWriter : public MCELFObjectTargetWriter {
  public:
   SampleELFObjectWriter(uint8_t OSABI);
-  virtual ~SampleELFObjectWriter();
+  ~SampleELFObjectWriter() override;
 
   // オブジェクトを生成するときやリンク時にアドレス解決するために
   // ELFObjectWriterなどから参照される
-  virtual unsigned GetRelocType(const MCValue &Target, const MCFixup &Fixup,
-                                bool IsPCRel) const;
+  unsigned getRelocType(MCContext &Ctx, const MCValue &Target,
+                        const MCFixup &Fixup, bool IsPCRel) const override;
 };
 }
 
@@ -41,7 +41,8 @@ SampleELFObjectWriter(uint8_t OSABI)
 SampleELFObjectWriter::~SampleELFObjectWriter() {}
 
 unsigned SampleELFObjectWriter::
-GetRelocType(const MCValue &Target,
+getRelocType(MCContext &Ctx,
+             const MCValue &Target,
              const MCFixup &Fixup,
              bool IsPCRel) const {
   // determine the type of the relocation

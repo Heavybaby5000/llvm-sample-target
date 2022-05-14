@@ -51,20 +51,21 @@ SampleRegisterInfo(const TargetInstrInfo &tii)
 //===----------------------------------------------------------------------===//
 
 // 呼び出し先待避レジスタ
-const uint16_t* SampleRegisterInfo::
+const MCPhysReg* SampleRegisterInfo::
 getCalleeSavedRegs(const MachineFunction *MF) const {
     return CSR_SingleFloatOnly_SaveList;
 }
 
 // 呼び出し元待避レジスタ
 const uint32_t* SampleRegisterInfo::
-getCallPreservedMask(CallingConv::ID) const {  
+getCallPreservedMask(const MachineFunction &MF,
+                     CallingConv::ID) const {  
     return CSR_SingleFloatOnly_RegMask;
 }
 
 BitVector SampleRegisterInfo::
 getReservedRegs(const MachineFunction &MF) const {
-  static const uint16_t ReservedCPURegs[] = {
+  static const MCPhysReg ReservedCPURegs[] = {
     Sample::ZERO, Sample::SP, Sample::RA, Sample::V0,
   };
 
@@ -87,8 +88,8 @@ eliminateFrameIndex(MachineBasicBlock::iterator II, int SPAdj,
   const MachineFunction &MF = *MI.getParent()->getParent();
 
   int FrameIndex = MI.getOperand(FIOperandNum).getIndex();
-  uint64_t stackSize = MF.getFrameInfo()->getStackSize();
-  int64_t spOffset = MF.getFrameInfo()->getObjectOffset(FrameIndex);
+  uint64_t stackSize = MF.getFrameInfo().getStackSize();
+  int64_t spOffset = MF.getFrameInfo().getObjectOffset(FrameIndex);
   int64_t Offset = spOffset + stackSize + MI.getOperand(FIOperandNum+1).getImm();
   unsigned FrameReg = Sample::SP;
 

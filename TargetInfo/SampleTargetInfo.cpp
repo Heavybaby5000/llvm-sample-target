@@ -14,10 +14,15 @@ using namespace llvm;
 
 #define DEBUG_TYPE "sample-target-info"
 
-Target llvm::TheSampleTarget;
+namespace llvm {
+Target &getTheSampleTarget() {
+  static Target TheSampleTarget;
+  return TheSampleTarget;
+}
+} // namespace llvm
 
 extern "C" void LLVMInitializeSampleTargetInfo() { 
   DEBUG(dbgs() << ">> InitSampleTargetInfo <<\n");
   RegisterTarget<Triple::sample, /*HasJIT=*/false>
-    X(TheSampleTarget, "sample", "Sample");
+    X(getTheSampleTarget(), "sample", "Sample");
 }

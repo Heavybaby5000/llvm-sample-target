@@ -35,18 +35,18 @@ hasFP(const MachineFunction &MF) const {
 }
 
 // ADJCALLSTACKDOWNとADJCALLSTACKUPを単純に削除する
-void SampleFrameLowering::
+MachineBasicBlock::iterator SampleFrameLowering::
 eliminateCallFramePseudoInstr(MachineFunction &MF, MachineBasicBlock &MBB,
                               MachineBasicBlock::iterator I) const {
   DEBUG(dbgs() << ">> SampleFrameLowering::eliminateCallFramePseudoInstr <<\n";);
-  MBB.erase(I);
+  return MBB.erase(I);
 }
 
 void SampleFrameLowering::
 emitPrologue(MachineFunction &MF, MachineBasicBlock &MBB) const {
   DEBUG(dbgs() << ">> SampleFrameLowering::emitPrologue <<\n");
 
-  MachineFrameInfo *MFI = MF.getFrameInfo();
+  MachineFrameInfo &MFI = MF.getFrameInfo();
 
   const SampleInstrInfo &TII =
     *static_cast<const SampleInstrInfo*>(MF.getSubtarget().getInstrInfo());
@@ -58,7 +58,7 @@ emitPrologue(MachineFunction &MF, MachineBasicBlock &MBB) const {
   uint64_t StackSize = 4 * 16;
 
    // Update stack size
-  MFI->setStackSize(StackSize);
+  MFI.setStackSize(StackSize);
 
   BuildMI(MBB, MBBI, dl, TII.get(Sample::MOVE), Sample::T0)
       .addImm(-StackSize);
@@ -72,13 +72,13 @@ emitEpilogue(MachineFunction &MF, MachineBasicBlock &MBB) const {
   DEBUG(dbgs() << ">> SampleFrameLowering::emitEpilogue <<\n");
 
   MachineBasicBlock::iterator MBBI = MBB.getLastNonDebugInstr();
-  MachineFrameInfo *MFI            = MF.getFrameInfo();
+  MachineFrameInfo &MFI            = MF.getFrameInfo();
   const SampleInstrInfo &TII =
     *static_cast<const SampleInstrInfo*>(MF.getSubtarget().getInstrInfo());
   DebugLoc dl = MBBI->getDebugLoc();
 
   // Get the number of bytes from FrameInfo
-  uint64_t StackSize = MFI->getStackSize();
+  uint64_t StackSize = MFI.getStackSize();
 
   // Adjust stack.
   BuildMI(MBB, MBBI, dl, TII.get(Sample::MOVE), Sample::T0)

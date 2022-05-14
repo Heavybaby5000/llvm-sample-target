@@ -24,4 +24,7 @@ SampleMCAsmInfo::SampleMCAsmInfo(const Triple &TT) {
 
   AlignmentIsInBytes = false;
   UsesELFSectionDirectiveForBSS = true;
+
+  // .note.GNU-stack セクションが出力されなくなる
+  //UsesNonexecutableStackSection = false;
 }

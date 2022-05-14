@@ -45,15 +45,15 @@ const SampleRegisterInfo &SampleInstrInfo::getRegisterInfo() const {
 /// not, return 0.  This predicate must return 0 if the instruction has
 /// any side effects other than loading from the stack slot.
 unsigned SampleInstrInfo::
-isLoadFromStackSlot(const MachineInstr *MI, int &FrameIndex) const {
-  unsigned Opc = MI->getOpcode();
+isLoadFromStackSlot(const MachineInstr &MI, int &FrameIndex) const {
+  unsigned Opc = MI.getOpcode();
 
   if (Opc == Sample::LOAD       && // Load命令
-      MI->getOperand(1).isFI()  && // スタックスロット
-      MI->getOperand(2).isImm() && // 即値が0
-      MI->getOperand(2).getImm() == 0) {
-    FrameIndex = MI->getOperand(1).getIndex();
-    return MI->getOperand(0).getReg();
+      MI.getOperand(1).isFI()  && // スタックスロット
+      MI.getOperand(2).isImm() && // 即値が0
+      MI.getOperand(2).getImm() == 0) {
+    FrameIndex = MI.getOperand(1).getIndex();
+    return MI.getOperand(0).getReg();
   }
   return 0;
 }
@@ -64,22 +64,22 @@ isLoadFromStackSlot(const MachineInstr *MI, int &FrameIndex) const {
 /// not, return 0.  This predicate must return 0 if the instruction has
 /// any side effects other than storing to the stack slot.
 unsigned SampleInstrInfo::
-isStoreToStackSlot(const MachineInstr *MI, int &FrameIndex) const {
-  unsigned Opc = MI->getOpcode();
+isStoreToStackSlot(const MachineInstr &MI, int &FrameIndex) const {
+  unsigned Opc = MI.getOpcode();
 
   if (Opc == Sample::STORE      && // Store命令
-      MI->getOperand(1).isFI()  && // スタックスロット
-      MI->getOperand(2).isImm() && // 即値が0
-      MI->getOperand(2).getImm() == 0) {
-    FrameIndex = MI->getOperand(1).getIndex();
-    return MI->getOperand(0).getReg();
+      MI.getOperand(1).isFI()  && // スタックスロット
+      MI.getOperand(2).isImm() && // 即値が0
+      MI.getOperand(2).getImm() == 0) {
+    FrameIndex = MI.getOperand(1).getIndex();
+    return MI.getOperand(0).getReg();
   }
   return 0;
 }
 
 void SampleInstrInfo::
 copyPhysReg(MachineBasicBlock &MBB,
-            MachineBasicBlock::iterator I, DebugLoc DL,
+            MachineBasicBlock::iterator I, const DebugLoc &DL,
             unsigned DestReg, unsigned SrcReg,
             bool KillSrc) const {
   unsigned Opc = 0, ZeroReg = 0;
@@ -107,7 +107,7 @@ storeRegToStackSlot(MachineBasicBlock &MBB, MachineBasicBlock::iterator I,
   DebugLoc DL;
   if (I != MBB.end()) DL = I->getDebugLoc();
   MachineFunction &MF = *MBB.getParent();
-  MachineFrameInfo &MFI = *MF.getFrameInfo();
+  MachineFrameInfo &MFI = MF.getFrameInfo();
 
   MachineMemOperand *MMO =
     MF.getMachineMemOperand(MachinePointerInfo::getFixedStack(MF, FI),
@@ -132,7 +132,7 @@ loadRegFromStackSlot(MachineBasicBlock &MBB,
   DebugLoc DL;
   if (MI != MBB.end()) DL = MI->getDebugLoc();
   MachineFunction &MF = *MBB.getParent();
-  MachineFrameInfo &MFI = *MF.getFrameInfo();
+  MachineFrameInfo &MFI = MF.getFrameInfo();
 
   MachineMemOperand *MMO =
     MF.getMachineMemOperand(MachinePointerInfo::getFixedStack(MF, FI),
@@ -149,7 +149,7 @@ loadRegFromStackSlot(MachineBasicBlock &MBB,
 //===----------------------------------------------------------------------===//
 
 bool SampleInstrInfo::
-AnalyzeBranch(MachineBasicBlock &MBB,
+analyzeBranch(MachineBasicBlock &MBB,
               MachineBasicBlock *&TBB,
               MachineBasicBlock *&FBB,
               SmallVectorImpl<MachineOperand> &Cond,
@@ -160,15 +160,16 @@ AnalyzeBranch(MachineBasicBlock &MBB,
 }
 
 unsigned SampleInstrInfo::
-InsertBranch(MachineBasicBlock &MBB, MachineBasicBlock *TBB,
+insertBranch(MachineBasicBlock &MBB, MachineBasicBlock *TBB,
              MachineBasicBlock *FBB,
-             const SmallVectorImpl<MachineOperand> &Cond,
-             DebugLoc DL) const {
+             ArrayRef<MachineOperand> Cond,
+             const DebugLoc &DL,
+             int *BytesAdded) const {
   llvm_unreachable("Target doesn't implement SampleInstrInfo::InsertBranch!");
 }
 
 unsigned SampleInstrInfo::
-RemoveBranch(MachineBasicBlock &MBB) const
+removeBranch(MachineBasicBlock &MBB, int *BytesRemoved) const
 {
   llvm_unreachable("Target doesn't implement SampleInstrInfo::RemoveBranch");
 }

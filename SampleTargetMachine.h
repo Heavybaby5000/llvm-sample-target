@@ -30,7 +30,7 @@ class SampleTargetMachine : public LLVMTargetMachine {
  public:
   SampleTargetMachine(const Target &T, const Triple &TT,
                       StringRef CPU, StringRef FS, const TargetOptions &Options,
-                      Reloc::Model RM, CodeModel::Model CM,
+                      Optional<Reloc::Model> RM, CodeModel::Model CM,
                       CodeGenOpt::Level OL);
 
   const SampleSubtarget *getSubtargetImpl() const {
@@ -41,9 +41,9 @@ class SampleTargetMachine : public LLVMTargetMachine {
   }
 
   // Pass Pipeline Configuration
-  virtual TargetPassConfig *createPassConfig(PassManagerBase &PM);
+  TargetPassConfig *createPassConfig(PassManagerBase &PM) override;
 
-  virtual TargetLoweringObjectFile *getObjFileLowering() const {
+  TargetLoweringObjectFile *getObjFileLowering() const override {
     return TLOF.get();
   }
 };
