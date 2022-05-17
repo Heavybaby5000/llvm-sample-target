@@ -99,14 +99,11 @@ SelectAddr(SDValue N, SDValue &Base, SDValue &Offset) {
 void SampleDAGToDAGISel::
 Select(SDNode *Node) {
   // Select the default instruction
-  SDNode *ResNode = SelectCode(Node);
+  SelectCode(Node);
 
-  DEBUG(errs() << "=> ");
-  if (ResNode == NULL || ResNode == Node)
-    DEBUG(Node->dumpr(CurDAG));
-  else
-    DEBUG(ResNode->dumpr(CurDAG));
-  DEBUG(errs() << "\n");
+  LLVM_DEBUG(errs() << "=> ");
+  LLVM_DEBUG(Node->dumpr(CurDAG));
+  LLVM_DEBUG(errs() << "\n");
 }
 
 /// createSampleISelDag - This pass converts a legalized DAG into a

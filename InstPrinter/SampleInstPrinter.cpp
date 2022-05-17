@@ -32,14 +32,14 @@ printRegName(raw_ostream &OS, unsigned RegNo) const {
 void SampleInstPrinter::
 printInst(const MCInst *MI, raw_ostream &O, StringRef Annot,
           const MCSubtargetInfo &STI) {
-  DEBUG(dbgs() << ">>> printInst:"; MI->dump());
+  LLVM_DEBUG(dbgs() << ">>> printInst:"; MI->dump());
   printInstruction(MI, O);
   printAnnotation(O, Annot);
 }
 
 void SampleInstPrinter::
 printOperand(const MCInst *MI, unsigned OpNo, raw_ostream &O) {
-  DEBUG(dbgs() << ">>> printOperand:" << *MI << " OpNo:" << OpNo << "\n");
+  LLVM_DEBUG(dbgs() << ">>> printOperand:" << *MI << " OpNo:" << OpNo << "\n");
   const MCOperand &Op = MI->getOperand(OpNo);
   if (Op.isReg()) {
     printRegName(O, Op.getReg());
@@ -53,7 +53,7 @@ printOperand(const MCInst *MI, unsigned OpNo, raw_ostream &O) {
 
 void SampleInstPrinter::
 printMemOperand(const MCInst *MI, int opNum, raw_ostream &O) {
-  DEBUG(dbgs() << ">>> printMemOperand:"; MI->dump());
+  LLVM_DEBUG(dbgs() << ">>> printMemOperand:"; MI->dump());
   printOperand(MI, opNum+1, O);
   O << "(";
   printOperand(MI, opNum, O);

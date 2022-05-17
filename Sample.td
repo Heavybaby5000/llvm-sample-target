@@ -333,9 +333,9 @@ def SUB   : ArithLogicInst<0x06, "sub", sub, IICAlu, CPURegs>;
 //===----------------------------------------------------------------------===//
 
 let Defs = [SP], Uses = [SP] in {
-def ADJCALLSTACKDOWN : SamplePseudo<(outs), (ins i32imm:$amt),
-                                  "!ADJCALLSTACKDOWN $amt",
-                                  [(callseq_start timm:$amt)]>;
+def ADJCALLSTACKDOWN : SamplePseudo<(outs), (ins i32imm:$amt1, i32imm:$amt2),
+                                  "!ADJCALLSTACKDOWN $amt1",
+                                  [(callseq_start timm:$amt1, timm:$amt2)]>;
 def ADJCALLSTACKUP   : SamplePseudo<(outs), (ins i32imm:$amt1, i32imm:$amt2),
                                   "!ADJCALLSTACKUP $amt1",
                                   [(callseq_end timm:$amt1, timm:$amt2)]>;

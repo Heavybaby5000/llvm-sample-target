@@ -15,7 +15,7 @@
 #define SAMPLEREGISTERINFO_H
 
 #include "Sample.h"
-#include "llvm/Target/TargetRegisterInfo.h"
+#include "llvm/CodeGen/TargetRegisterInfo.h"
 
 #define GET_REGINFO_HEADER
 #include "SampleGenRegisterInfo.inc"

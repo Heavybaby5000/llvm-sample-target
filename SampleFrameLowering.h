@@ -15,7 +15,7 @@
 #define SAMPLE_FRAMELOWERING_H
 
 #include "Sample.h"
-#include "llvm/Target/TargetFrameLowering.h"
+#include "llvm/CodeGen/TargetFrameLowering.h"
 
 namespace llvm {
 class SampleSubtarget;

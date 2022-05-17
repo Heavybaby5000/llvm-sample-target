@@ -32,7 +32,7 @@ using namespace llvm;
 
 // Prepare value for the target space for it
 static unsigned adjustFixupValue(unsigned Kind, uint64_t Value) {
-  DEBUG(dbgs() << ">> adjustFixupValue: kind:" << Kind << " Value:" << Value << "\n");
+  LLVM_DEBUG(dbgs() << ">> adjustFixupValue: kind:" << Kind << " Value:" << Value << "\n");
 
   switch (Kind) {
   default:
@@ -51,17 +51,19 @@ class SampleAsmBackend : public MCAsmBackend {
 
 public:
   SampleAsmBackend(const Target &T,  Triple::OSType _OSType)
-    :MCAsmBackend(), OSType(_OSType) {}
+    :MCAsmBackend(support::little), OSType(_OSType) {}
 
-  MCObjectWriter *createObjectWriter(raw_pwrite_stream &OS) const override {
-    return createSampleELFObjectWriter(OS, OSType);
+  std::unique_ptr<MCObjectTargetWriter>
+  createObjectTargetWriter() const override {
+    return createSampleELFObjectWriter(OSType);
   }
 
   /// ApplyFixup - Apply the \arg Value for given \arg Fixup into the provided
   /// data fragment, at the offset specified by the fixup and following the
   /// fixup kind as appropriate.
-  void applyFixup(const MCFixup &Fixup, char *Data, unsigned DataSize,
-                  uint64_t Value, bool IsPCRel) const override;
+  void applyFixup(const MCAssembler &Asm, const MCFixup &Fixup, const MCValue &Target,
+                  MutableArrayRef<char> Data, uint64_t Value, bool IsResolved,
+                  const MCSubtargetInfo *STI) const override;
 
   unsigned getNumFixupKinds() const override { return Sample::NumTargetFixupKinds; }
 
@@ -74,7 +76,8 @@ public:
   /// relaxation.
   ///
   /// \param Inst - The instruction to test.
-  bool mayNeedRelaxation(const MCInst &Inst) const override {
+  bool mayNeedRelaxation(const MCInst &Inst,
+                         const MCSubtargetInfo &STI) const override {
     return false;
   }
 
@@ -106,14 +109,15 @@ public:
   /// it should return an error.
   ///
   /// \return - True on success.
-  bool writeNopData(uint64_t Count, MCObjectWriter *OW) const override {
+  bool writeNopData(raw_ostream &OS, uint64_t Count) const override {
     return true;
   }
 }; // class SampleAsmBackend
 
 void SampleAsmBackend::
-applyFixup(const MCFixup &Fixup, char *Data, unsigned DataSize,
-           uint64_t Value, bool IsPCRel) const {
+applyFixup(const MCAssembler &Asm, const MCFixup &Fixup, const MCValue &Target,
+           MutableArrayRef<char> Data, uint64_t Value, bool IsResolved,
+           const MCSubtargetInfo *STI) const {
   MCFixupKind Kind = Fixup.getKind();
   Value = adjustFixupValue((unsigned)Kind, Value);
 
@@ -125,10 +129,10 @@ applyFixup(const MCFixup &Fixup, char *Data, unsigned DataSize,
   // Number of bytes we need to fixup
   unsigned NumBytes = (getFixupKindInfo(Kind).TargetSize + 7) / 8;
 
-  DEBUG(dbgs() << "  Offset: " << Offset << "\n");
-  DEBUG(dbgs() << "  NumBytes: " << NumBytes << "\n");
-  DEBUG(dbgs() << "  TargetSize: " << getFixupKindInfo(Kind).TargetSize << "\n");
-  DEBUG(dbgs() << format("  Data: 0x%08x\n", (uint32_t)Data[Offset]));
+  LLVM_DEBUG(dbgs() << "  Offset: " << Offset << "\n");
+  LLVM_DEBUG(dbgs() << "  NumBytes: " << NumBytes << "\n");
+  LLVM_DEBUG(dbgs() << "  TargetSize: " << getFixupKindInfo(Kind).TargetSize << "\n");
+  LLVM_DEBUG(dbgs() << format("  Data: 0x%08x\n", (uint32_t)Data[Offset]));
 
   // Grab current value, if any, from bits.
   uint64_t CurVal = 0;
@@ -137,11 +141,11 @@ applyFixup(const MCFixup &Fixup, char *Data, unsigned DataSize,
     unsigned Idx = i;
     CurVal |= (uint64_t)((uint8_t)Data[Offset + Idx]) << (i*8);
   }
-  DEBUG(dbgs() << format("  CurVal: 0x%08x\n", CurVal));
+  LLVM_DEBUG(dbgs() << format("  CurVal: 0x%08x\n", CurVal));
 
   uint64_t Mask = ((uint64_t)(-1) >> (64 - getFixupKindInfo(Kind).TargetSize));
   CurVal |= Value & Mask;
-  DEBUG(dbgs() << format("  CurVal: 0x%08x\n", CurVal));
+  LLVM_DEBUG(dbgs() << format("  CurVal: 0x%08x\n", CurVal));
 
   // Write out the fixed up bytes back to the code/data bits.
   for (unsigned i = 0; i != NumBytes; ++i) {
@@ -149,7 +153,7 @@ applyFixup(const MCFixup &Fixup, char *Data, unsigned DataSize,
     Data[Offset + Idx] = (uint8_t)((CurVal >> (i*8)) & 0xff);
   }
 
-  DEBUG(dbgs() << format("  Data: 0x%08x\n", (uint32_t)Data[Offset]));
+  LLVM_DEBUG(dbgs() << format("  Data: 0x%08x\n", (uint32_t)Data[Offset]));
 }
 
 const MCFixupKindInfo &SampleAsmBackend::
@@ -173,8 +177,9 @@ getFixupKindInfo(MCFixupKind Kind) const {
 } // namespace
 
 // MCAsmBackend
-MCAsmBackend *llvm::createSampleAsmBackend(const Target &T, const MCRegisterInfo &MRI,
-                                           const Triple &TT, StringRef CPU,
+MCAsmBackend *llvm::createSampleAsmBackend(const Target &T, const MCSubtargetInfo &STI,
+                                           const MCRegisterInfo &MRI,
                                            const MCTargetOptions &Options) {
+  const Triple &TT = STI.getTargetTriple();
   return new SampleAsmBackend(T, TT.getOS());
 }

@@ -34,7 +34,7 @@ using namespace llvm;
 MCOperand SampleMCInstLower::
 LowerSymbolOperand(const MachineOperand &MO,
                    MachineOperandType MOTy) const {
-  DEBUG(dbgs() << ">>> LowerSymbolOperand <<<\n");
+  LLVM_DEBUG(dbgs() << ">>> LowerSymbolOperand <<<\n");
 
   switch(MO.getTargetFlags()) {
     default: llvm_unreachable("Invalid target flag!");
@@ -80,7 +80,7 @@ LowerSymbolOperand(const MachineOperand &MO,
 
 MCOperand SampleMCInstLower::
 LowerOperand(const MachineOperand& MO) const {
-  DEBUG(dbgs() 
+  LLVM_DEBUG(dbgs() 
         << ">>> LowerOperand:" << MO 
         << " type:" << MO.getType() << "\n");
 
@@ -110,7 +110,7 @@ LowerOperand(const MachineOperand& MO) const {
 
 void SampleMCInstLower::
 Lower(const MachineInstr *MI, MCInst &OutMI) const {
-  DEBUG(dbgs() << ">> SampleMCInstLower::Lower <<\n");
+  LLVM_DEBUG(dbgs() << ">> SampleMCInstLower::Lower <<\n");
   OutMI.setOpcode(MI->getOpcode());
 
   for (unsigned i = 0, e = MI->getNumOperands(); i != e; ++i) {

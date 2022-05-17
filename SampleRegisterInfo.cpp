@@ -23,10 +23,10 @@
 #include "llvm/CodeGen/MachineInstrBuilder.h"
 #include "llvm/CodeGen/MachineFunction.h"
 #include "llvm/CodeGen/MachineFrameInfo.h"
-#include "llvm/Target/TargetFrameLowering.h"
+#include "llvm/CodeGen/TargetFrameLowering.h"
+#include "llvm/CodeGen/TargetInstrInfo.h"
 #include "llvm/Target/TargetMachine.h"
 #include "llvm/Target/TargetOptions.h"
-#include "llvm/Target/TargetInstrInfo.h"
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/ErrorHandling.h"
@@ -82,7 +82,7 @@ getReservedRegs(const MachineFunction &MF) const {
 void SampleRegisterInfo::
 eliminateFrameIndex(MachineBasicBlock::iterator II, int SPAdj,
                     unsigned FIOperandNum, RegScavenger *RS) const {
-  DEBUG(dbgs() << ">> SampleRegisterInfo::eliminateFrameIndex <<\n";);
+  LLVM_DEBUG(dbgs() << ">> SampleRegisterInfo::eliminateFrameIndex <<\n";);
 
   MachineInstr &MI = *II;
   const MachineFunction &MF = *MI.getParent()->getParent();
@@ -93,18 +93,18 @@ eliminateFrameIndex(MachineBasicBlock::iterator II, int SPAdj,
   int64_t Offset = spOffset + stackSize + MI.getOperand(FIOperandNum+1).getImm();
   unsigned FrameReg = Sample::SP;
 
-  DEBUG(errs() 
-        << "\nFunction : " << MF.getFunction()->getName() << "\n"
+  LLVM_DEBUG(errs() 
+        << "\nFunction : " << MF.getFunction().getName() << "\n"
         << "<--------->\n" << MI
         << "FrameIndex : " << FrameIndex << "\n"
         << "spOffset   : " << spOffset << "\n"
         << "stackSize  : " << stackSize << "\n"
         << "Offset     : " << Offset << "\n" << "<--------->\n");
 
-  DEBUG(errs() << "Before:" << MI);
+  LLVM_DEBUG(errs() << "Before:" << MI);
   MI.getOperand(FIOperandNum).ChangeToRegister(FrameReg, false);
   MI.getOperand(FIOperandNum+1).ChangeToImmediate(Offset);
-  DEBUG(errs() << "After:" << MI);
+  LLVM_DEBUG(errs() << "After:" << MI);
 }
 
 unsigned SampleRegisterInfo::

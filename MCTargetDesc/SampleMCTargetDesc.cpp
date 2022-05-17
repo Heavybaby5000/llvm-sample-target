@@ -16,6 +16,7 @@
 #include "InstPrinter/SampleInstPrinter.h"
 #include "llvm/MC/MachineLocation.h"
 #include "llvm/MC/MCInstrInfo.h"
+#include "llvm/MC/MCObjectWriter.h"
 #include "llvm/MC/MCRegisterInfo.h"
 #include "llvm/MC/MCStreamer.h"
 #include "llvm/MC/MCSubtargetInfo.h"
@@ -67,12 +68,13 @@ static MCInstPrinter *createSampleMCInstPrinter(const Triple &T,
   return new SampleInstPrinter(MAI, MII, MRI);
 }
 
-static MCStreamer *createMCStreamer(const Triple &T,
-                                    MCContext &Ctx, MCAsmBackend &MAB,
-                                    raw_pwrite_stream &_OS,
-                                    MCCodeEmitter *_Emitter,
+static MCStreamer *createMCStreamer(const Triple &T, MCContext &Ctx,
+                                    std::unique_ptr<MCAsmBackend> &&MAB,
+                                    std::unique_ptr<MCObjectWriter> &&OW,
+                                    std::unique_ptr<MCCodeEmitter> &&_Emitter,
                                     bool RelaxAll) {
-  return createELFStreamer(Ctx, MAB, _OS, _Emitter, RelaxAll);
+  return createELFStreamer(Ctx, std::move(MAB), std::move(OW), std::move(_Emitter),
+                           RelaxAll);
 }
 
 extern "C" void LLVMInitializeSampleTargetMC() {

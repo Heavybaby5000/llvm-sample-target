@@ -22,7 +22,7 @@ Target &getTheSampleTarget() {
 } // namespace llvm
 
 extern "C" void LLVMInitializeSampleTargetInfo() { 
-  DEBUG(dbgs() << ">> InitSampleTargetInfo <<\n");
+  LLVM_DEBUG(dbgs() << ">> InitSampleTargetInfo <<\n");
   RegisterTarget<Triple::sample, /*HasJIT=*/false>
-    X(getTheSampleTarget(), "sample", "Sample");
+    X(getTheSampleTarget(), "sample", "Sample", "Sample");
 }

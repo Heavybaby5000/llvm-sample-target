@@ -16,7 +16,7 @@
 
 #include "SampleSubtarget.h"
 #include "llvm/Target/TargetMachine.h"
-#include "llvm/Target/TargetFrameLowering.h"
+#include "llvm/CodeGen/TargetFrameLowering.h"
 #include "llvm/Support/Debug.h"
 
 namespace llvm {
@@ -30,8 +30,8 @@ class SampleTargetMachine : public LLVMTargetMachine {
  public:
   SampleTargetMachine(const Target &T, const Triple &TT,
                       StringRef CPU, StringRef FS, const TargetOptions &Options,
-                      Optional<Reloc::Model> RM, CodeModel::Model CM,
-                      CodeGenOpt::Level OL);
+                      Optional<Reloc::Model> RM, Optional<CodeModel::Model> CM,
+                      CodeGenOpt::Level OL, bool JIT);
 
   const SampleSubtarget *getSubtargetImpl() const {
     return &Subtarget;

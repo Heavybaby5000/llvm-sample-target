@@ -16,7 +16,7 @@
 using namespace llvm;
 
 SampleMCAsmInfo::SampleMCAsmInfo(const Triple &TT) {
-  PointerSize = 4;
+  CodePointerSize = 4;
 
   PrivateGlobalPrefix = ".L";
   //WeakRefDirective ="\t.weak\t";

@@ -38,13 +38,13 @@ hasFP(const MachineFunction &MF) const {
 MachineBasicBlock::iterator SampleFrameLowering::
 eliminateCallFramePseudoInstr(MachineFunction &MF, MachineBasicBlock &MBB,
                               MachineBasicBlock::iterator I) const {
-  DEBUG(dbgs() << ">> SampleFrameLowering::eliminateCallFramePseudoInstr <<\n";);
+  LLVM_DEBUG(dbgs() << ">> SampleFrameLowering::eliminateCallFramePseudoInstr <<\n";);
   return MBB.erase(I);
 }
 
 void SampleFrameLowering::
 emitPrologue(MachineFunction &MF, MachineBasicBlock &MBB) const {
-  DEBUG(dbgs() << ">> SampleFrameLowering::emitPrologue <<\n");
+  LLVM_DEBUG(dbgs() << ">> SampleFrameLowering::emitPrologue <<\n");
 
   MachineFrameInfo &MFI = MF.getFrameInfo();
 
@@ -69,7 +69,7 @@ emitPrologue(MachineFunction &MF, MachineBasicBlock &MBB) const {
 
 void SampleFrameLowering::
 emitEpilogue(MachineFunction &MF, MachineBasicBlock &MBB) const {
-  DEBUG(dbgs() << ">> SampleFrameLowering::emitEpilogue <<\n");
+  LLVM_DEBUG(dbgs() << ">> SampleFrameLowering::emitEpilogue <<\n");
 
   MachineBasicBlock::iterator MBBI = MBB.getLastNonDebugInstr();
   MachineFrameInfo &MFI            = MF.getFrameInfo();

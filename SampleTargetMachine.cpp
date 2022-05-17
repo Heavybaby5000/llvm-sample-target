@@ -36,13 +36,20 @@ static Reloc::Model getEffectiveRelocModel(Optional<Reloc::Model> RM) {
   return *RM;
 }
 
+static CodeModel::Model getEffectiveCodeModel(Optional<CodeModel::Model> CM) {
+  if (CM)
+    return *CM;
+  return CodeModel::Small;
+}
+
 SampleTargetMachine::
 SampleTargetMachine(const Target &T, const Triple &TT,
                     StringRef CPU, StringRef FS, const TargetOptions &Options,
-                    Optional<Reloc::Model> RM, CodeModel::Model CM,
-                    CodeGenOpt::Level OL)
+                    Optional<Reloc::Model> RM, Optional<CodeModel::Model> CM,
+                    CodeGenOpt::Level OL, bool JIT)
     : LLVMTargetMachine(T, computeDataLayout(), TT, CPU, FS, Options,
-                        getEffectiveRelocModel(RM), CM, OL),
+                        getEffectiveRelocModel(RM),
+                        getEffectiveCodeModel(CM), OL),
       TLOF(make_unique<SampleTargetObjectFile>()),
       Subtarget(TT, CPU, FS, *this) {
   initAsmInfo();
@@ -52,7 +59,7 @@ namespace {
 /// Sample Code Generator Pass Configuration Options.
 class SamplePassConfig : public TargetPassConfig {
  public:
-  SamplePassConfig(SampleTargetMachine *TM, PassManagerBase &PM)
+  SamplePassConfig(SampleTargetMachine &TM, PassManagerBase &PM)
     : TargetPassConfig(TM, PM) {}
 
   SampleTargetMachine &getSampleTargetMachine() const {
@@ -64,7 +71,7 @@ class SamplePassConfig : public TargetPassConfig {
 } // namespace
 
 TargetPassConfig *SampleTargetMachine::createPassConfig(PassManagerBase &PM) {
-  return new SamplePassConfig(this, PM);
+  return new SamplePassConfig(*this, PM);
 }
 
 bool SamplePassConfig::addInstSelector() {

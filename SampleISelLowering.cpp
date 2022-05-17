@@ -60,7 +60,7 @@ SampleTargetLowering::
 SampleTargetLowering(const SampleTargetMachine &TM)
   : TargetLowering(TM),
     Subtarget(*TM.getSubtargetImpl()) {
-  DEBUG(dbgs() << ">> SampleTargetLowering::constructor <<\n");
+  LLVM_DEBUG(dbgs() << ">> SampleTargetLowering::constructor <<\n");
 
   // booleanをどう表すかを定義
   setBooleanContents(ZeroOrOneBooleanContent);
@@ -110,8 +110,8 @@ LowerFormalArguments(SDValue Chain, CallingConv::ID CallConv,
                      const SmallVectorImpl<ISD::InputArg> &Ins,
                      const SDLoc &dl, SelectionDAG &DAG,
                      SmallVectorImpl<SDValue> &InVals) const {
-  DEBUG(dbgs() << ">> SampleTargetLowering::LowerFormalArguments <<\n");
-  DEBUG(dbgs() << "  Chain: ";  Chain->dumpr(););
+  LLVM_DEBUG(dbgs() << ">> SampleTargetLowering::LowerFormalArguments <<\n");
+  LLVM_DEBUG(dbgs() << "  Chain: ";  Chain->dumpr(););
 
   MachineFunction &MF = DAG.getMachineFunction();
   MachineFrameInfo &MFI = MF.getFrameInfo();
@@ -130,7 +130,7 @@ LowerFormalArguments(SDValue Chain, CallingConv::ID CallConv,
       MVT RegVT = VA.getLocVT();
       const TargetRegisterClass *RC = &Sample::CPURegsRegClass;
 
-      DEBUG(dbgs() << "  Reg N" << i 
+      LLVM_DEBUG(dbgs() << "  Reg N" << i 
             << " LowerFormalArguments Unhandled argument type: "
             << RegVT.SimpleTy << "\n";);
       if (VA.getLocInfo() != CCValAssign::Full) {
@@ -148,7 +148,7 @@ LowerFormalArguments(SDValue Chain, CallingConv::ID CallConv,
       assert(VA.isMemLoc());
       // Load the argument to a virtual register
       unsigned ObjSize = VA.getLocVT().getSizeInBits()/8;
-      DEBUG(dbgs() << "  Mem N" << i
+      LLVM_DEBUG(dbgs() << "  Mem N" << i
             << " LowerFormalArguments Unhandled argument type: "
             << EVT(VA.getLocVT()).getEVTString()
             << "\n";);
@@ -163,13 +163,13 @@ LowerFormalArguments(SDValue Chain, CallingConv::ID CallConv,
     }
   }
 
-  DEBUG(
+  LLVM_DEBUG(
       for (SmallVectorImpl<SDValue>::const_iterator i = InVals.begin();
            i != InVals.end(); ++i) {
         dbgs() << "  InVals: "; i->getNode()->dump();
       });
     
-  DEBUG(dbgs() << ">> done LowerFormalArguments <<\n";);
+  LLVM_DEBUG(dbgs() << ">> done LowerFormalArguments <<\n";);
   return Chain;
 }
 
@@ -194,9 +194,9 @@ LowerCall(CallLoweringInfo &CLI,
   CallingConv::ID CallConv              = CLI.CallConv;
   bool isVarArg                         = CLI.IsVarArg;
 
-  DEBUG(dbgs() << ">> SampleTargetLowering::LowerCall <<\n");
-  DEBUG(dbgs() << "  InChain: "; InChain->dumpr(););
-  DEBUG(dbgs() << "  Callee: "; Callee->dumpr(););
+  LLVM_DEBUG(dbgs() << ">> SampleTargetLowering::LowerCall <<\n");
+  LLVM_DEBUG(dbgs() << "  InChain: "; InChain->dumpr(););
+  LLVM_DEBUG(dbgs() << "  Callee: "; Callee->dumpr(););
 
   // 末尾呼び出しは未対応
   isTailCall = false;
@@ -210,12 +210,11 @@ LowerCall(CallLoweringInfo &CLI,
 
   // スタックを何Byte使っているか取得
   unsigned NumBytes = CCInfo.getNextStackOffset();
-  DEBUG(dbgs() << "  stack offset: " << NumBytes << "\n");
+  LLVM_DEBUG(dbgs() << "  stack offset: " << NumBytes << "\n");
 
   // 関数呼び出し開始のNode
   auto PtrVT = getPointerTy(DAG.getDataLayout());
-  InChain = DAG.getCALLSEQ_START(InChain ,
-                                 DAG.getConstant(NumBytes, dl, PtrVT, true), dl);
+  InChain = DAG.getCALLSEQ_START(InChain, NumBytes, 0, dl);
 
   SmallVector<std::pair<unsigned, SDValue>, 4> RegsToPass;
   SDValue StackPtr;
@@ -225,7 +224,7 @@ LowerCall(CallLoweringInfo &CLI,
     SDValue Arg = OutVals[i];
     CCValAssign &VA = ArgLocs[i];
     ISD::ArgFlagsTy Flags = Outs[i].Flags;
-    DEBUG(dbgs() << "  Arg: "; Arg->dumpr());
+    LLVM_DEBUG(dbgs() << "  Arg: "; Arg->dumpr());
 
     // 引数が数値
     if (Flags.isByVal()) {
@@ -252,7 +251,7 @@ LowerCall(CallLoweringInfo &CLI,
 
     // レジスタ経由の引数はRegsToPassに追加
     if (VA.isRegLoc()) {
-      DEBUG(dbgs() << "    Reg: " << VA.getLocReg() << "\n");
+      LLVM_DEBUG(dbgs() << "    Reg: " << VA.getLocReg() << "\n");
       RegsToPass.push_back(std::make_pair(VA.getLocReg(), Arg));
     } else {
       assert(VA.isMemLoc());
@@ -270,10 +269,10 @@ LowerCall(CallLoweringInfo &CLI,
 
   if (GlobalAddressSDNode *G = dyn_cast<GlobalAddressSDNode>(Callee)) {
     Callee = DAG.getTargetGlobalAddress(G->getGlobal(), dl, MVT::i32);
-    DEBUG(dbgs() << "  Global: " << Callee.getNode() << "\n");
+    LLVM_DEBUG(dbgs() << "  Global: " << Callee.getNode() << "\n");
   } else if (ExternalSymbolSDNode *E = dyn_cast<ExternalSymbolSDNode>(Callee)) {
     Callee = DAG.getTargetExternalSymbol(E->getSymbol(), MVT::i32);
-    DEBUG(dbgs() << "  External: " << Callee.getNode() << "\n");
+    LLVM_DEBUG(dbgs() << "  External: " << Callee.getNode() << "\n");
   }
 
   SDVTList NodeTys = DAG.getVTList(MVT::Other, MVT::Glue);
@@ -341,8 +340,8 @@ LowerReturn(SDValue Chain,
             const SmallVectorImpl<ISD::OutputArg> &Outs,
             const SmallVectorImpl<SDValue> &OutVals,
             const SDLoc &dl, SelectionDAG &DAG) const {
-  DEBUG(dbgs() << ">> SampleTargetLowering::LowerReturn <<\n");
-  DEBUG(dbgs() << " Chain: "; Chain->dumpr(););
+  LLVM_DEBUG(dbgs() << ">> SampleTargetLowering::LowerReturn <<\n");
+  LLVM_DEBUG(dbgs() << " Chain: "; Chain->dumpr(););
 
   SmallVector<CCValAssign, 16> RVLocs;
   CCState CCInfo(CallConv, isVarArg, DAG.getMachineFunction(),
@@ -367,7 +366,7 @@ LowerReturn(SDValue Chain,
     RetOps.push_back(DAG.getRegister(VA.getLocReg(), VA.getLocVT()));
   }
 
-  DEBUG(
+  LLVM_DEBUG(
       for (SmallVectorImpl<SDValue>::const_iterator i = OutVals.begin();
            i != OutVals.end(); ++i) {
         dbgs() << "  OutVals: "; i->getNode()->dump();
