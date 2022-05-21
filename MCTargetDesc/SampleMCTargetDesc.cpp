@@ -13,8 +13,9 @@
 
 #include "SampleMCAsmInfo.h"
 #include "SampleMCTargetDesc.h"
-#include "InstPrinter/SampleInstPrinter.h"
+#include "SampleInstPrinter.h"
 #include "llvm/MC/MachineLocation.h"
+#include "llvm/MC/MCDwarf.h"
 #include "llvm/MC/MCInstrInfo.h"
 #include "llvm/MC/MCObjectWriter.h"
 #include "llvm/MC/MCRegisterInfo.h"
@@ -51,7 +52,8 @@ static MCSubtargetInfo *createSampleMCSubtargetInfo(const Triple &TT, StringRef 
   return createSampleMCSubtargetInfoImpl(TT, CPU, FS);
 }
 
-static MCAsmInfo *createSampleMCAsmInfo(const MCRegisterInfo &MRI, const Triple &TT) {
+static MCAsmInfo *createSampleMCAsmInfo(const MCRegisterInfo &MRI, const Triple &TT,
+                                        const MCTargetOptions &Options) {
   MCAsmInfo *MAI = new SampleMCAsmInfo(TT);
 
   MCCFIInstruction Inst = MCCFIInstruction::createDefCfa(0, Sample::SP, 0);

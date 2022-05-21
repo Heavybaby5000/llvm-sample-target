@@ -36,12 +36,6 @@ static Reloc::Model getEffectiveRelocModel(Optional<Reloc::Model> RM) {
   return *RM;
 }
 
-static CodeModel::Model getEffectiveCodeModel(Optional<CodeModel::Model> CM) {
-  if (CM)
-    return *CM;
-  return CodeModel::Small;
-}
-
 SampleTargetMachine::
 SampleTargetMachine(const Target &T, const Triple &TT,
                     StringRef CPU, StringRef FS, const TargetOptions &Options,
@@ -49,8 +43,8 @@ SampleTargetMachine(const Target &T, const Triple &TT,
                     CodeGenOpt::Level OL, bool JIT)
     : LLVMTargetMachine(T, computeDataLayout(), TT, CPU, FS, Options,
                         getEffectiveRelocModel(RM),
-                        getEffectiveCodeModel(CM), OL),
-      TLOF(make_unique<SampleTargetObjectFile>()),
+                        getEffectiveCodeModel(CM, CodeModel::Small), OL),
+      TLOF(std::make_unique<SampleTargetObjectFile>()),
       Subtarget(TT, CPU, FS, *this) {
   initAsmInfo();
 }

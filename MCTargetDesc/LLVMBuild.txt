@@ -19,5 +19,5 @@
 type = Library
 name = SampleDesc
 parent = Sample
-required_libraries = MC SampleAsmPrinter SampleInfo Support Target
+required_libraries = MC SampleInfo Support Target
 add_to_library_groups = Sample

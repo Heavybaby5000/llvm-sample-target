@@ -1,3 +1,3 @@
-add_llvm_library(LLVMSampleDisassembler
+add_llvm_component_library(LLVMSampleDisassembler
   SampleDisassembler.cpp
   )

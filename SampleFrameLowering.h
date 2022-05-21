@@ -26,7 +26,7 @@ class SampleFrameLowering : public TargetFrameLowering {
 
  public:
   explicit SampleFrameLowering(const SampleSubtarget &sti)
-      : TargetFrameLowering(StackGrowsDown, 8, 0), STI(sti) {
+      : TargetFrameLowering(StackGrowsDown, Align(8), 0), STI(sti) {
   }
 
   /// emitProlog/emitEpilog - These methods insert prolog and epilog code into

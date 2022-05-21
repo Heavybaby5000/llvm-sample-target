@@ -17,7 +17,7 @@
 #include "SampleMachineFunction.h"
 #include "SampleTargetMachine.h"
 #include "SampleSubtarget.h"
-#include "InstPrinter/SampleInstPrinter.h"
+#include "MCTargetDesc/SampleInstPrinter.h"
 #include "MCTargetDesc/SampleMCTargetDesc.h"
 #include "llvm/IR/DerivedTypes.h"
 #include "llvm/IR/Function.h"
@@ -83,7 +83,7 @@ SampleTargetLowering(const SampleTargetMachine &TM)
   }
 
   // 関数のアラインメント
-  setMinFunctionAlignment(2);
+  setMinFunctionAlignment(Align(4));
 
   // スタックポインタのレジスタを指定
   setStackPointerRegisterToSaveRestore(Sample::SP);

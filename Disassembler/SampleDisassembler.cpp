@@ -42,7 +42,6 @@ public:
                               uint64_t &size,
                               ArrayRef<uint8_t> Bytes,
                               uint64_t address,
-                              raw_ostream &vStream,
                               raw_ostream &cStream) const override;
 
 private:
@@ -128,7 +127,6 @@ getInstruction(MCInst &instr,
                uint64_t &Size,
                ArrayRef<uint8_t> Bytes,
                uint64_t Address,
-               raw_ostream &vStream,
                raw_ostream &cStream) const {
   uint32_t Insn;
 

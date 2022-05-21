@@ -17,7 +17,7 @@
 #include "SampleInstrInfo.h"
 #include "SampleMCInstLower.h"
 #include "SampleTargetMachine.h"
-#include "InstPrinter/SampleInstPrinter.h"
+#include "MCTargetDesc/SampleInstPrinter.h"
 #include "llvm/IR/Constants.h"
 #include "llvm/IR/DerivedTypes.h"
 #include "llvm/IR/Module.h"

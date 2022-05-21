@@ -26,9 +26,6 @@ add_llvm_target(SampleCodeGen
   SampleTargetObjectFile.cpp
 )
 
-add_dependencies(LLVMSampleCodeGen SampleCommonTableGen intrinsics_gen)
-
 add_subdirectory(Disassembler)
-add_subdirectory(InstPrinter)
 add_subdirectory(MCTargetDesc)
 add_subdirectory(TargetInfo)

@@ -65,7 +65,7 @@ getCallPreservedMask(const MachineFunction &MF,
 
 BitVector SampleRegisterInfo::
 getReservedRegs(const MachineFunction &MF) const {
-  static const MCPhysReg ReservedCPURegs[] = {
+  static const Register ReservedCPURegs[] = {
     Sample::ZERO, Sample::SP, Sample::RA, Sample::V0,
   };
 
@@ -91,7 +91,7 @@ eliminateFrameIndex(MachineBasicBlock::iterator II, int SPAdj,
   uint64_t stackSize = MF.getFrameInfo().getStackSize();
   int64_t spOffset = MF.getFrameInfo().getObjectOffset(FrameIndex);
   int64_t Offset = spOffset + stackSize + MI.getOperand(FIOperandNum+1).getImm();
-  unsigned FrameReg = Sample::SP;
+  Register FrameReg = Sample::SP;
 
   LLVM_DEBUG(errs() 
         << "\nFunction : " << MF.getFunction().getName() << "\n"
@@ -107,7 +107,7 @@ eliminateFrameIndex(MachineBasicBlock::iterator II, int SPAdj,
   LLVM_DEBUG(errs() << "After:" << MI);
 }
 
-unsigned SampleRegisterInfo::
+Register SampleRegisterInfo::
 getFrameRegister(const MachineFunction &MF) const {
     return Sample::SP;
 }

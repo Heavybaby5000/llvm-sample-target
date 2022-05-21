@@ -16,7 +16,7 @@
 #include "SampleSubtarget.h"
 #include "SampleMachineFunction.h"
 #include "MCTargetDesc/SampleMCTargetDesc.h"
-#include "InstPrinter/SampleInstPrinter.h"
+#include "MCTargetDesc/SampleInstPrinter.h"
 #include "llvm/CodeGen/MachineInstrBuilder.h"
 #include "llvm/CodeGen/MachineRegisterInfo.h"
 #include "llvm/Support/ErrorHandling.h"
@@ -80,9 +80,9 @@ isStoreToStackSlot(const MachineInstr &MI, int &FrameIndex) const {
 void SampleInstrInfo::
 copyPhysReg(MachineBasicBlock &MBB,
             MachineBasicBlock::iterator I, const DebugLoc &DL,
-            unsigned DestReg, unsigned SrcReg,
+            MCRegister DestReg, MCRegister SrcReg,
             bool KillSrc) const {
-  unsigned Opc = 0, ZeroReg = 0;
+  MCRegister Opc = 0, ZeroReg = 0;
   Opc = Sample::ADD, ZeroReg = Sample::ZERO;
 
   MachineInstrBuilder MIB = BuildMI(MBB, I, DL, get(Opc));
