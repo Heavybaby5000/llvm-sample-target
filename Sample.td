@@ -19,8 +19,8 @@ include "llvm/Target/Target.td"
 // Registers
 //===----------------------------------------------------------------------===//
 
-class SampleReg<bits<4> num, string n> : Register<n> {
-  field bits<4> num;
+class SampleReg<bits<16> num, string n> : Register<n> {
+  let HWEncoding = num;
   let Namespace = "Sample";
 }
 
@@ -333,9 +333,9 @@ def SUB   : ArithLogicInst<0x06, "sub", sub, IICAlu, CPURegs>;
 //===----------------------------------------------------------------------===//
 
 let Defs = [SP], Uses = [SP] in {
-def ADJCALLSTACKDOWN : SamplePseudo<(outs), (ins i32imm:$amt),
-                                  "!ADJCALLSTACKDOWN $amt",
-                                  [(callseq_start timm:$amt)]>;
+def ADJCALLSTACKDOWN : SamplePseudo<(outs), (ins i32imm:$amt1, i32imm:$amt2),
+                                  "!ADJCALLSTACKDOWN $amt1",
+                                  [(callseq_start timm:$amt1, timm:$amt2)]>;
 def ADJCALLSTACKUP   : SamplePseudo<(outs), (ins i32imm:$amt1, i32imm:$amt2),
                                   "!ADJCALLSTACKUP $amt1",
                                   [(callseq_end timm:$amt1, timm:$amt2)]>;
@@ -382,12 +382,6 @@ def SampleInstrInfo : InstrInfo;
 
 def : Processor<"sample32", SampleGenericItineraries, []>;
 
-def SampleAsmWriter : AsmWriter {
-  string AsmWriterClassName  = "InstPrinter";
-  bit isMCAsmWriter = 1;
-}
-
 def Sample : Target {
   let InstructionSet = SampleInstrInfo;
-  let AssemblyWriters = [SampleAsmWriter];
 }

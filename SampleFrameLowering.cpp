@@ -15,15 +15,17 @@
 #include "SampleInstrInfo.h"
 #include "SampleMachineFunction.h"
 #include "MCTargetDesc/SampleMCTargetDesc.h"
-#include "llvm/Function.h"
+#include "llvm/IR/Function.h"
 #include "llvm/CodeGen/MachineFrameInfo.h"
 #include "llvm/CodeGen/MachineFunction.h"
 #include "llvm/CodeGen/MachineInstrBuilder.h"
 #include "llvm/CodeGen/MachineModuleInfo.h"
 #include "llvm/CodeGen/MachineRegisterInfo.h"
-#include "llvm/DataLayout.h"
+#include "llvm/IR/DataLayout.h"
 #include "llvm/Target/TargetOptions.h"
 #include "llvm/Support/CommandLine.h"
+
+#define DEBUG_TYPE "sample-frame-lowering"
 
 using namespace llvm;
 
@@ -32,15 +34,22 @@ hasFP(const MachineFunction &MF) const {
   return false;
 }
 
-void SampleFrameLowering::
-emitPrologue(MachineFunction &MF) const {
-  DEBUG(dbgs() << ">> SampleFrameLowering::emitPrologue <<\n");
+// ADJCALLSTACKDOWNとADJCALLSTACKUPを単純に削除する
+MachineBasicBlock::iterator SampleFrameLowering::
+eliminateCallFramePseudoInstr(MachineFunction &MF, MachineBasicBlock &MBB,
+                              MachineBasicBlock::iterator I) const {
+  LLVM_DEBUG(dbgs() << ">> SampleFrameLowering::eliminateCallFramePseudoInstr <<\n";);
+  return MBB.erase(I);
+}
 
-  MachineBasicBlock &MBB   = MF.front();
-  MachineFrameInfo *MFI = MF.getFrameInfo();
+void SampleFrameLowering::
+emitPrologue(MachineFunction &MF, MachineBasicBlock &MBB) const {
+  LLVM_DEBUG(dbgs() << ">> SampleFrameLowering::emitPrologue <<\n");
+
+  MachineFrameInfo &MFI = MF.getFrameInfo();
 
   const SampleInstrInfo &TII =
-    *static_cast<const SampleInstrInfo*>(MF.getTarget().getInstrInfo());
+    *static_cast<const SampleInstrInfo*>(MF.getSubtarget().getInstrInfo());
 
   MachineBasicBlock::iterator MBBI = MBB.begin();
   DebugLoc dl = MBBI != MBB.end() ? MBBI->getDebugLoc() : DebugLoc();
@@ -49,7 +58,7 @@ emitPrologue(MachineFunction &MF) const {
   uint64_t StackSize = 4 * 16;
 
    // Update stack size
-  MFI->setStackSize(StackSize);
+  MFI.setStackSize(StackSize);
 
   BuildMI(MBB, MBBI, dl, TII.get(Sample::MOVE), Sample::T0)
       .addImm(-StackSize);
@@ -60,16 +69,16 @@ emitPrologue(MachineFunction &MF) const {
 
 void SampleFrameLowering::
 emitEpilogue(MachineFunction &MF, MachineBasicBlock &MBB) const {
-  DEBUG(dbgs() << ">> SampleFrameLowering::emitEpilogue <<\n");
+  LLVM_DEBUG(dbgs() << ">> SampleFrameLowering::emitEpilogue <<\n");
 
   MachineBasicBlock::iterator MBBI = MBB.getLastNonDebugInstr();
-  MachineFrameInfo *MFI            = MF.getFrameInfo();
+  MachineFrameInfo &MFI            = MF.getFrameInfo();
   const SampleInstrInfo &TII =
-    *static_cast<const SampleInstrInfo*>(MF.getTarget().getInstrInfo());
+    *static_cast<const SampleInstrInfo*>(MF.getSubtarget().getInstrInfo());
   DebugLoc dl = MBBI->getDebugLoc();
 
   // Get the number of bytes from FrameInfo
-  uint64_t StackSize = MFI->getStackSize();
+  uint64_t StackSize = MFI.getStackSize();
 
   // Adjust stack.
   BuildMI(MBB, MBBI, dl, TII.get(Sample::MOVE), Sample::T0)
@@ -77,4 +86,13 @@ emitEpilogue(MachineFunction &MF, MachineBasicBlock &MBB) const {
   BuildMI(MBB, MBBI, dl, TII.get(Sample::ADD), Sample::SP)
       .addReg(Sample::SP)
       .addReg(Sample::T0);
+}
+
+void SampleFrameLowering::determineCalleeSaves(MachineFunction &MF,
+                                               BitVector &SavedRegs,
+                                               RegScavenger *RS) const {
+  TargetFrameLowering::determineCalleeSaves(MF, SavedRegs, RS);
+
+  // RAレジスタの書き変えはハードウェアで行うため手動で追加
+  SavedRegs.set(Sample::RA);
 }

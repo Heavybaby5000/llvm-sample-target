@@ -15,8 +15,7 @@
 #define SAMPLE_FRAMELOWERING_H
 
 #include "Sample.h"
-#include "SampleSubtarget.h"
-#include "llvm/Target/TargetFrameLowering.h"
+#include "llvm/CodeGen/TargetFrameLowering.h"
 
 namespace llvm {
 class SampleSubtarget;
@@ -27,14 +26,22 @@ class SampleFrameLowering : public TargetFrameLowering {
 
  public:
   explicit SampleFrameLowering(const SampleSubtarget &sti)
-      : TargetFrameLowering(StackGrowsDown, 8, 0), STI(sti) {
+      : TargetFrameLowering(StackGrowsDown, Align(8), 0), STI(sti) {
   }
 
   /// emitProlog/emitEpilog - These methods insert prolog and epilog code into
   /// the function.
-  void emitPrologue(MachineFunction &MF) const /*override*/;
-  void emitEpilogue(MachineFunction &MF, MachineBasicBlock &MBB) const /*override*/;
-  bool hasFP(const MachineFunction &MF) const /*override*/;
+  void emitPrologue(MachineFunction &MF, MachineBasicBlock &MBB) const override;
+  void emitEpilogue(MachineFunction &MF, MachineBasicBlock &MBB) const override;
+
+  MachineBasicBlock::iterator
+  eliminateCallFramePseudoInstr(MachineFunction &MF,
+                                MachineBasicBlock &MBB,
+                                MachineBasicBlock::iterator I) const override;
+
+  bool hasFP(const MachineFunction &MF) const override;
+  void determineCalleeSaves(MachineFunction &MF, BitVector &SavedRegs,
+                            RegScavenger *RS = nullptr) const override;
 };
 } // End llvm namespace
 

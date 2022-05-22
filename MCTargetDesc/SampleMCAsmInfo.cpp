@@ -15,15 +15,12 @@
 #include "llvm/ADT/StringRef.h"
 using namespace llvm;
 
-SampleMCAsmInfo::SampleMCAsmInfo(const Target &T, StringRef TT) {
-  PointerSize = 4;
+SampleMCAsmInfo::SampleMCAsmInfo(const Triple &TT) {
+  CodePointerSize = 4;
 
   PrivateGlobalPrefix = ".L";
-  //WeakRefDirective ="\t.weak\t";
-  PCSymbol=".";
   CommentString = ";";
 
   AlignmentIsInBytes = false;
-  AllowNameToStartWithDigit = true;
   UsesELFSectionDirectiveForBSS = true;
 }

@@ -17,29 +17,34 @@
 #include "llvm/Support/DataTypes.h"
 #include "llvm/Support/Debug.h"
 
+#include <memory>
+
 namespace llvm {
 class MCAsmBackend;
 class MCCodeEmitter;
 class MCContext;
 class MCInstrInfo;
-class MCObjectWriter;
+class MCObjectTargetWriter;
 class MCRegisterInfo;
 class MCSubtargetInfo;
+class MCTargetOptions;
 class StringRef;
 class Target;
+class Triple;
 class raw_ostream;
+class raw_pwrite_stream;
 
-extern Target TheSampleTarget;
+Target &getTheSampleTarget();
 
 MCCodeEmitter *createSampleMCCodeEmitter(const MCInstrInfo &MCII,
                                          const MCRegisterInfo &MRI,
-                                         const MCSubtargetInfo &STI,
                                          MCContext &Ctx);
 
-MCAsmBackend *createSampleAsmBackend(const Target &T, StringRef TT, StringRef CPU);
+MCAsmBackend *createSampleAsmBackend(const Target &T, const MCSubtargetInfo &STI,
+                                     const MCRegisterInfo &MRI,
+                                     const MCTargetOptions &Options);
 
-MCObjectWriter *createSampleELFObjectWriter(raw_ostream &OS,
-                                            uint8_t OSABI);
+std::unique_ptr<MCObjectTargetWriter> createSampleELFObjectWriter(uint8_t OSABI);
 } // End llvm namespace
 
 // Defines symbolic names for Sample registers.  This defines a mapping from

@@ -12,47 +12,60 @@
 //===----------------------------------------------------------------------===//
 
 #include "SampleTargetMachine.h"
+#include "SampleTargetObjectFile.h"
 #include "Sample.h"
-#include "llvm/PassManager.h"
+#include "llvm/IR/PassManager.h"
 #include "llvm/CodeGen/Passes.h"
+#include "llvm/CodeGen/TargetPassConfig.h"
 #include "llvm/MC/MCAsmInfo.h"
 #include "llvm/Support/TargetRegistry.h"
 using namespace llvm;
 
 extern "C" void LLVMInitializeSampleTarget() {
   // Register the target.
-  RegisterTargetMachine<SampleTargetMachine> X(TheSampleTarget);
+  RegisterTargetMachine<SampleTargetMachine> X(getTheSampleTarget());
+}
+
+static std::string computeDataLayout() {
+  return "e-p:32:32:32-i8:8:32-i16:16:32-i64:64:64-n32";
+}
+
+static Reloc::Model getEffectiveRelocModel(Optional<Reloc::Model> RM) {
+  if (!RM.hasValue())
+    return Reloc::Static;
+  return *RM;
 }
 
 SampleTargetMachine::
-SampleTargetMachine(const Target &T, StringRef Triple,
+SampleTargetMachine(const Target &T, const Triple &TT,
                     StringRef CPU, StringRef FS, const TargetOptions &Options,
-                    Reloc::Model RM, CodeModel::Model CM,
-                    CodeGenOpt::Level OL)
-    : LLVMTargetMachine(T, Triple, CPU, FS, Options, RM, CM, OL),
-      DL("e-p:32:32:32-i8:8:32-i16:16:32-i64:64:64-n32"),
-      Subtarget(Triple, CPU, FS),
-      InstrInfo(*this),
-      FrameLowering(Subtarget),
-      TLInfo(*this), TSInfo(*this) {}
+                    Optional<Reloc::Model> RM, Optional<CodeModel::Model> CM,
+                    CodeGenOpt::Level OL, bool JIT)
+    : LLVMTargetMachine(T, computeDataLayout(), TT, CPU, FS, Options,
+                        getEffectiveRelocModel(RM),
+                        getEffectiveCodeModel(CM, CodeModel::Small), OL),
+      TLOF(std::make_unique<SampleTargetObjectFile>()),
+      Subtarget(TT, CPU, FS, *this) {
+  initAsmInfo();
+}
 
 namespace {
 /// Sample Code Generator Pass Configuration Options.
 class SamplePassConfig : public TargetPassConfig {
  public:
-  SamplePassConfig(SampleTargetMachine *TM, PassManagerBase &PM)
+  SamplePassConfig(SampleTargetMachine &TM, PassManagerBase &PM)
     : TargetPassConfig(TM, PM) {}
 
   SampleTargetMachine &getSampleTargetMachine() const {
     return getTM<SampleTargetMachine>();
   }
 
-  virtual bool addInstSelector();
+  bool addInstSelector() override;
 };
 } // namespace
 
 TargetPassConfig *SampleTargetMachine::createPassConfig(PassManagerBase &PM) {
-  return new SamplePassConfig(this, PM);
+  return new SamplePassConfig(*this, PM);
 }
 
 bool SamplePassConfig::addInstSelector() {
