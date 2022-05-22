@@ -13,3 +13,9 @@ $ cd build
 $ cmake -DCMAKE_INSTALL_PREFIX=/opt/llvm -DCMAKE_BUILD_TYPE=Debug ../llvm-project/llvm
 $ make -j4
 $ sudo make install
+
+## run test
+$ export PATH=/opt/llvm/bin:$PATH
+$ cd -
+$ cd llvm-project/llvm/lib/Target/Sample
+$ llvm-lit test
