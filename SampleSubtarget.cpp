@@ -13,7 +13,10 @@
 
 #include "SampleSubtarget.h"
 #include "Sample.h"
+#include "llvm/Support/Debug.h"
 #include "llvm/Support/TargetRegistry.h"
+
+#define DEBUG_TYPE "sample-subtarget"
 
 #define GET_SUBTARGETINFO_TARGET_DESC
 #define GET_SUBTARGETINFO_CTOR
@@ -21,10 +24,14 @@
 
 using namespace llvm;
 
-SampleSubtarget::SampleSubtarget(const std::string &TT,
+SampleSubtarget::SampleSubtarget(const Triple &TT,
                                  const std::string &CPU,
-                                 const std::string &FS)
-    : SampleGenSubtargetInfo(TT, CPU, FS) {
+                                 const std::string &FS,
+                                 const SampleTargetMachine &TM)
+    : SampleGenSubtargetInfo(TT, CPU, FS),
+      InstrInfo(*this),
+      FrameLowering(*this),
+      TLInfo(TM), TSInfo() {
   std::string CPUName = "generic";
 
   // Parse features string.

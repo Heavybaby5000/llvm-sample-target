@@ -1,15 +1,15 @@
 ## setup sample target
-$ wget http://llvm.org/releases/3.2/llvm-3.2.src.tar.gz
-$ tar zxf llvm-3.2.src.tar.gz
-$ cd llvm-3.2.src/lib/Target
-$ git clone git://github.com/sabottenda/llvm-sample-target.git Sample
-$ cd - && cd llvm-3.2.src
-$ patch -p1 < ./lib/Target/Sample/config.patch
+$ git clone https://github.com/llvm/llvm-project.git
+$ cd llvm-project/llvm/lib/Target
+$ git checkout llvmorg-10.0.0
+$ git clone https://github.com/Heavybaby5000/llvm-sample-target.git Sample
+$ cd - && cd llvm-project
+$ patch -p1 < ./llvm/lib/Target/Sample/config.patch
 
 ## compile and install
 $ cd -
 $ mkdir build
 $ cd build
-$ ../llvm-3.2.src/configure --prefix=/opt/llvm --enable-debug-runtime --enable-assertions --enable-debug-symbols --disable-optimized --enable-debug-runtime
+$ cmake -DCMAKE_INSTALL_PREFIX=/opt/llvm -DCMAKE_BUILD_TYPE=Debug ../llvm-project/llvm
 $ make -j4
 $ sudo make install

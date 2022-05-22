@@ -22,19 +22,17 @@ namespace llvm {
   class MachineInstr;
   class MachineModuleInfoMachO;
   class MachineOperand;
-  class Mangler;
 
   /// SampleMCInstLower - This class is used to lower an MachineInstr
   /// into an MCInst.
 class LLVM_LIBRARY_VISIBILITY SampleMCInstLower {
   typedef MachineOperand::MachineOperandType MachineOperandType;
   MCContext &Ctx;
-  Mangler &Mang;
   const AsmPrinter &Printer;
 
  public:
-  SampleMCInstLower(MCContext &ctx, Mangler &mang, AsmPrinter &printer)
-    : Ctx(ctx), Mang(mang), Printer(printer) {}
+  SampleMCInstLower(MCContext &ctx, AsmPrinter &printer)
+    : Ctx(ctx), Printer(printer) {}
   void Lower(const MachineInstr *MI, MCInst &OutMI) const;
 
  private:

@@ -19,5 +19,5 @@
 type = Library
 name = SampleDisassembler
 parent = Sample
-required_libraries = MC Support SampleInfo
+required_libraries = MCDisassembler Support SampleInfo
 add_to_library_groups = Sample

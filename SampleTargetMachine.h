@@ -14,15 +14,9 @@
 #ifndef SAMPLE_TARGETMACHINE_H
 #define SAMPLE_TARGETMACHINE_H
 
-#include "SampleFrameLowering.h"
-#include "SampleInstrInfo.h"
-#include "SampleISelLowering.h"
-#include "SampleSelectionDAGInfo.h"
-#include "SampleRegisterInfo.h"
 #include "SampleSubtarget.h"
-#include "llvm/DataLayout.h"
 #include "llvm/Target/TargetMachine.h"
-#include "llvm/Target/TargetFrameLowering.h"
+#include "llvm/CodeGen/TargetFrameLowering.h"
 #include "llvm/Support/Debug.h"
 
 namespace llvm {
@@ -30,43 +24,28 @@ namespace llvm {
 class Module;
 
 class SampleTargetMachine : public LLVMTargetMachine {
-  const DataLayout DL;
+  std::unique_ptr<TargetLoweringObjectFile> TLOF;
   SampleSubtarget Subtarget;
-  SampleInstrInfo InstrInfo;
-  SampleFrameLowering FrameLowering;
-  SampleTargetLowering TLInfo;
-  SampleSelectionDAGInfo TSInfo;
 
  public:
-  SampleTargetMachine(const Target &T, StringRef TT,
+  SampleTargetMachine(const Target &T, const Triple &TT,
                       StringRef CPU, StringRef FS, const TargetOptions &Options,
-                      Reloc::Model RM, CodeModel::Model CM,
-                      CodeGenOpt::Level OL);
+                      Optional<Reloc::Model> RM, Optional<CodeModel::Model> CM,
+                      CodeGenOpt::Level OL, bool JIT);
 
-  virtual const SampleInstrInfo *getInstrInfo() const {
-    return &InstrInfo;
-  }
-  virtual const SampleSubtarget *getSubtargetImpl() const {
+  const SampleSubtarget *getSubtargetImpl() const {
     return &Subtarget;
   }
-  virtual const SampleRegisterInfo *getRegisterInfo() const {
-    return &InstrInfo.getRegisterInfo();
-  }
-  virtual const DataLayout *getDataLayout() const {
-    return &DL;
-  }
-  virtual const SampleTargetLowering *getTargetLowering() const {
-    return &TLInfo;
-  }
-  virtual const SampleFrameLowering *getFrameLowering() const{
-    return &FrameLowering;
-  }
-  virtual const SampleSelectionDAGInfo* getSelectionDAGInfo() const {
-    return &TSInfo;
+  const SampleSubtarget *getSubtargetImpl(const Function &F) const override {
+    return getSubtargetImpl();
   }
 
   // Pass Pipeline Configuration
-  virtual TargetPassConfig *createPassConfig(PassManagerBase &PM);
+  TargetPassConfig *createPassConfig(PassManagerBase &PM) override;
+
+  TargetLoweringObjectFile *getObjFileLowering() const override {
+    return TLOF.get();
+  }
 };
 } // end namespace llvm
 

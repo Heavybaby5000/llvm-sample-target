@@ -14,16 +14,15 @@
 #ifndef SAMPLE_TARGETASMINFO_H
 #define SAMPLE_TARGETASMINFO_H
 
-#include "llvm/MC/MCAsmInfo.h"
+#include "llvm/MC/MCAsmInfoELF.h"
 
 namespace llvm {
-  class StringRef;
-  class Target;
+  class Triple;
 
-  class SampleMCAsmInfo : public MCAsmInfo {
-    virtual void anchor() {};
+  class SampleMCAsmInfo : public MCAsmInfoELF {
+    void anchor() override {};
   public:
-    explicit SampleMCAsmInfo(const Target &T, StringRef TT);
+    explicit SampleMCAsmInfo(const Triple &TT);
   };
 
 } // namespace llvm

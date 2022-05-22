@@ -13,17 +13,15 @@
 
 #include "Sample.h"
 #include "SampleSubtarget.h"
-#include "llvm/MC/EDInstInfo.h"
-#include "llvm/MC/MCDisassembler.h"
+#include "llvm/MC/MCDisassembler/MCDisassembler.h"
 #include "llvm/MC/MCFixedLenDisassembler.h"
-#include "llvm/Support/MemoryObject.h"
 #include "llvm/Support/TargetRegistry.h"
 #include "llvm/MC/MCSubtargetInfo.h"
 #include "llvm/MC/MCInst.h"
 #include "llvm/MC/MCRegisterInfo.h"
 #include "llvm/Support/MathExtras.h"
 
-#include "SampleGenEDInfo.inc"
+#define DEBUG_TYPE "sample-disassembler"
 
 using namespace llvm;
 
@@ -34,31 +32,24 @@ class SampleDisassembler : public MCDisassembler {
 public:
   /// Constructor     - Initializes the disassembler.
   ///
-  SampleDisassembler(const MCSubtargetInfo &STI)
-      : MCDisassembler(STI) {}
+  SampleDisassembler(const MCSubtargetInfo &STI, MCContext &Ctx)
+      : MCDisassembler(STI, Ctx) {}
 
   ~SampleDisassembler() {}
 
   /// getInstruction - See MCDisassembler.
   DecodeStatus getInstruction(MCInst &instr,
                               uint64_t &size,
-                              const MemoryObject &region,
+                              ArrayRef<uint8_t> Bytes,
                               uint64_t address,
-                              raw_ostream &vStream,
-                              raw_ostream &cStream) const;
-
-  const EDInstInfo *getEDInfo() const;
+                              raw_ostream &cStream) const override;
 
 private:
-  DecodeStatus readInstruction32(const MemoryObject &region,
+  DecodeStatus readInstruction32(ArrayRef<uint8_t> Bytes,
                                  uint64_t address,
                                  uint64_t &size,
                                  uint32_t &insn) const;
 };
-
-const EDInstInfo *SampleDisassembler::getEDInfo() const {
-  return instInfoSample;
-}
 
 // Decoder tables for Sample register
 static const unsigned CPURegsTable[] = {
@@ -96,13 +87,14 @@ static DecodeStatus DecodeCallTarget(MCInst &Inst,
 
 static MCDisassembler *createSampleDisassembler(
                        const Target &T,
-                       const MCSubtargetInfo &STI) {
-  return new SampleDisassembler(STI);
+                       const MCSubtargetInfo &STI,
+                       MCContext &Ctx) {
+  return new SampleDisassembler(STI, Ctx);
 }
 
 extern "C" void LLVMInitializeSampleDisassembler() {
   // Register the disassembler.
-  TargetRegistry::RegisterMCDisassembler(TheSampleTarget,
+  TargetRegistry::RegisterMCDisassembler(getTheSampleTarget(),
                                          createSampleDisassembler);
 }
 
@@ -111,14 +103,12 @@ extern "C" void LLVMInitializeSampleDisassembler() {
   /// readInstruction - read four bytes from the MemoryObject
   /// and return 32 bit word sorted according to the given endianess
 DecodeStatus SampleDisassembler::
-readInstruction32(const MemoryObject &region,
+readInstruction32(ArrayRef<uint8_t> Bytes,
                   uint64_t address,
                   uint64_t &size,
                   uint32_t &insn) const {
-  uint8_t Bytes[4];
-
   // We want to read exactly 4 Bytes of data.
-  if (region.readBytes(address, 4, (uint8_t*)Bytes, NULL) == -1) {
+  if (Bytes.size() < 4) {
     size = 0;
     return MCDisassembler::Fail;
   }
@@ -135,13 +125,12 @@ readInstruction32(const MemoryObject &region,
 DecodeStatus SampleDisassembler::
 getInstruction(MCInst &instr,
                uint64_t &Size,
-               const MemoryObject &Region,
+               ArrayRef<uint8_t> Bytes,
                uint64_t Address,
-               raw_ostream &vStream,
                raw_ostream &cStream) const {
   uint32_t Insn;
 
-  DecodeStatus Result = readInstruction32(Region, Address, Size,
+  DecodeStatus Result = readInstruction32(Bytes, Address, Size,
                                           Insn);
   if (Result == MCDisassembler::Fail)
     return MCDisassembler::Fail;
@@ -164,7 +153,7 @@ static DecodeStatus DecodeCPURegsRegisterClass(MCInst &Inst,
   if (RegNo > 31)
     return MCDisassembler::Fail;
 
-  Inst.addOperand(MCOperand::CreateReg(CPURegsTable[RegNo]));
+  Inst.addOperand(MCOperand::createReg(CPURegsTable[RegNo]));
   return MCDisassembler::Success;
 }
 
@@ -176,9 +165,9 @@ static DecodeStatus DecodeMem(MCInst &Inst,
   int Reg = (int)fieldFromInstruction(Insn, 16, 4);
   int Base = (int)fieldFromInstruction(Insn, 20, 4);
 
-  Inst.addOperand(MCOperand::CreateReg(CPURegsTable[Reg]));
-  Inst.addOperand(MCOperand::CreateReg(CPURegsTable[Base]));
-  Inst.addOperand(MCOperand::CreateImm(Offset));
+  Inst.addOperand(MCOperand::createReg(CPURegsTable[Reg]));
+  Inst.addOperand(MCOperand::createReg(CPURegsTable[Base]));
+  Inst.addOperand(MCOperand::createImm(Offset));
 
   return MCDisassembler::Success;
 }
@@ -190,8 +179,8 @@ static DecodeStatus DecodeMoveTarget(MCInst &Inst,
   int Offset = SignExtend32<20>(Insn & 0xfffff);
   int Reg = (int)fieldFromInstruction(Insn, 20, 4);
 
-  Inst.addOperand(MCOperand::CreateReg(CPURegsTable[Reg]));
-  Inst.addOperand(MCOperand::CreateImm(Offset));
+  Inst.addOperand(MCOperand::createReg(CPURegsTable[Reg]));
+  Inst.addOperand(MCOperand::createImm(Offset));
 
   return MCDisassembler::Success;
 }
@@ -202,6 +191,6 @@ static DecodeStatus DecodeCallTarget(MCInst &Inst,
                                      const void *Decoder) {
 
   unsigned CallOffset = fieldFromInstruction(Insn, 0, 24) << 2;
-  Inst.addOperand(MCOperand::CreateImm(CallOffset));
+  Inst.addOperand(MCOperand::createImm(CallOffset));
   return MCDisassembler::Success;
 }

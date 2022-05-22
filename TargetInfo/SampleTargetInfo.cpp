@@ -8,14 +8,21 @@
 //===----------------------------------------------------------------------===//
 
 #include "Sample.h"
-#include "llvm/Module.h"
+#include "llvm/IR/Module.h"
 #include "llvm/Support/TargetRegistry.h"
 using namespace llvm;
 
-Target llvm::TheSampleTarget;
+#define DEBUG_TYPE "sample-target-info"
+
+namespace llvm {
+Target &getTheSampleTarget() {
+  static Target TheSampleTarget;
+  return TheSampleTarget;
+}
+} // namespace llvm
 
 extern "C" void LLVMInitializeSampleTargetInfo() { 
-  DEBUG(dbgs() << ">> InitSampleTargetInfo <<\n");
+  LLVM_DEBUG(dbgs() << ">> InitSampleTargetInfo <<\n");
   RegisterTarget<Triple::sample, /*HasJIT=*/false>
-    X(TheSampleTarget, "sample", "Sample");
+    X(getTheSampleTarget(), "sample", "Sample", "Sample");
 }

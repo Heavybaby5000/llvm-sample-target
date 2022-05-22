@@ -21,19 +21,20 @@
 #include "llvm/MC/MCContext.h"
 #include "llvm/MC/MCExpr.h"
 #include "llvm/MC/MCInst.h"
-#include "llvm/Target/Mangler.h"
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/ADT/SmallString.h"
 #include "llvm/MC/MCSymbol.h"
 #include "llvm/Support/Debug.h"
 
+#define DEBUG_TYPE "sample-mcinst-lower"
+
 using namespace llvm;
 
 MCOperand SampleMCInstLower::
 LowerSymbolOperand(const MachineOperand &MO,
                    MachineOperandType MOTy) const {
-  DEBUG(dbgs() << ">>> LowerSymbolOperand <<<\n");
+  LLVM_DEBUG(dbgs() << ">>> LowerSymbolOperand <<<\n");
 
   switch(MO.getTargetFlags()) {
     default: llvm_unreachable("Invalid target flag!");
@@ -47,7 +48,7 @@ LowerSymbolOperand(const MachineOperand &MO,
     Symbol = MO.getMBB()->getSymbol();
     break;
   case MachineOperand::MO_GlobalAddress:
-    Symbol = Mang.getSymbol(MO.getGlobal());
+    Symbol = Printer.getSymbol(MO.getGlobal());
     Offset = MO.getOffset();
     break;
   case MachineOperand::MO_BlockAddress:
@@ -67,19 +68,19 @@ LowerSymbolOperand(const MachineOperand &MO,
     llvm_unreachable("<unknown operand type>");
   }
 
-  const MCExpr *Expr = MCSymbolRefExpr::Create(Symbol, Ctx);
+  const MCExpr *Expr = MCSymbolRefExpr::create(Symbol, Ctx);
 
   if (Offset) {
-    const MCConstantExpr *OffsetExpr =  MCConstantExpr::Create(Offset, Ctx);
-    Expr = MCBinaryExpr::CreateAdd(Expr, OffsetExpr, Ctx);
+    const MCConstantExpr *OffsetExpr =  MCConstantExpr::create(Offset, Ctx);
+    Expr = MCBinaryExpr::createAdd(Expr, OffsetExpr, Ctx);
   }
 
-  return MCOperand::CreateExpr(Expr);
+  return MCOperand::createExpr(Expr);
 }
 
 MCOperand SampleMCInstLower::
 LowerOperand(const MachineOperand& MO) const {
-  DEBUG(dbgs() 
+  LLVM_DEBUG(dbgs() 
         << ">>> LowerOperand:" << MO 
         << " type:" << MO.getType() << "\n");
 
@@ -88,9 +89,9 @@ LowerOperand(const MachineOperand& MO) const {
   case MachineOperand::MO_Register:
     // Ignore all implicit register operands.
     if (MO.isImplicit()) break;
-    return MCOperand::CreateReg(MO.getReg());
+    return MCOperand::createReg(MO.getReg());
   case MachineOperand::MO_Immediate:
-    return MCOperand::CreateImm(MO.getImm());
+    return MCOperand::createImm(MO.getImm());
   case MachineOperand::MO_MachineBasicBlock:
   case MachineOperand::MO_GlobalAddress:
   case MachineOperand::MO_ExternalSymbol:
@@ -109,7 +110,7 @@ LowerOperand(const MachineOperand& MO) const {
 
 void SampleMCInstLower::
 Lower(const MachineInstr *MI, MCInst &OutMI) const {
-  DEBUG(dbgs() << ">> SampleMCInstLower::Lower <<\n");
+  LLVM_DEBUG(dbgs() << ">> SampleMCInstLower::Lower <<\n");
   OutMI.setOpcode(MI->getOpcode());
 
   for (unsigned i = 0, e = MI->getNumOperands(); i != e; ++i) {
